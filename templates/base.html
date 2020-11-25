@@ -19,10 +19,30 @@
     <title>GTFS Grading Application</title>
 </head>
 <body>
+<div class="cover-container d-flex h-100 p-3 flex-column text-center">
+    <header class="masthead mb-auto">
+        <div class="inner">
+            <h3 class="masthead-brand">GTFS Grading Application</h3>
+            <nav class="nav nav-masthead justify-content-center">
+                <a class="nav-link active" href="#">Home</a>
+                <a class="nav-link" href="#">Admin</a>
+                <a class="nav-link" href="#">Contact</a>
+            </nav>
+        </div>
+    </header>
 
-{% block content %}
+    {% include 'messages.html' %}
+    {% block content %}
 
-{% endblock %}
+    {% endblock %}
+
+    <footer class="mastfoot mt-auto">
+        <div class="inner">
+            <p>Cover template for <a href="https://getbootstrap.com/">Bootstrap</a>, by <a href="https://twitter.com/mdo">@mdo</a>.</p>
+        </div>
+    </footer>
+</div>
+
 
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->

@@ -13,42 +13,42 @@ from typing import final
 
 #region AbstractClasses
 
-
-class GtfsFeed(ABC):
-    """GtfsFeed is an abstract class and/or interface working classes GTFS data and
-
-    It contains an interface for multiple methods of getting gtfs data which are parsed using the
-    parse_gtfs_method.  Regardless of how GTFS data is parsed it should be in a consistent format
-    so the interface methods in this abstract class can function.
-    """
-
-    @final
-    def get_list_of_tables(self) -> None:
-        """Returns a list of tables in the GTFS feed"""
-        print("get_list_of_tables NotImplemented")
-        raise NotImplementedError
-
-    @final
-    def get_table(self, table_name) -> None:
-        """Gets a table by the provided table name"""
-        print("get_table NotImplemented")
-        raise NotImplementedError
-
-
-
-    @final
-    def get_row_by_table_and_index(self, table_name, row_index) -> None:
-        """Gets a row of data by the table name and index."""
-        print("get_row_by_table_and_index NotImplemented")
-        # raise NotImplementedError
-
-    @abstractmethod
-    def parse_gtfs(self) -> None:
-        # if file:
-        #   one class
-        # if url:
-        #   another class
-        raise NotImplementedError
+# # Replaced by Partridge
+# class GtfsFeed(ABC):
+#     """GtfsFeed is an abstract class and/or interface working classes GTFS data and
+#
+#     It contains an interface for multiple methods of getting gtfs data which are parsed using the
+#     parse_gtfs_method.  Regardless of how GTFS data is parsed it should be in a consistent format
+#     so the interface methods in this abstract class can function.
+#     """
+#
+#     @final
+#     def get_list_of_tables(self) -> None:
+#         """Returns a list of tables in the GTFS feed"""
+#         print("get_list_of_tables NotImplemented")
+#         raise NotImplementedError
+#
+#     @final
+#     def get_table(self, table_name) -> None:
+#         """Gets a table by the provided table name"""
+#         print("get_table NotImplemented")
+#         raise NotImplementedError
+#
+#
+#
+#     @final
+#     def get_row_by_table_and_index(self, table_name, row_index) -> None:
+#         """Gets a row of data by the table name and index."""
+#         print("get_row_by_table_and_index NotImplemented")
+#         # raise NotImplementedError
+#
+#     @abstractmethod
+#     def parse_gtfs(self) -> None:
+#         # if file:
+#         #   one class
+#         # if url:
+#         #   another class
+#         raise NotImplementedError
 
 
 class ReviewWidget(ABC):
@@ -172,15 +172,16 @@ class DataSelector(ABC):
 
 #region GtfsFeed
 
-class GtfsUrlParser(GtfsFeed):
-
-    def parse_gtfs(self) -> None:
-        pass
-
-class GtfsFileParser(GtfsFeed):
-
-    def parse_gtfs(self) -> None:
-        pass
+# # replaced by Partridge
+# class GtfsUrlParser(GtfsFeed):
+#
+#     def parse_gtfs(self) -> None:
+#         pass
+#
+# class GtfsFileParser(GtfsFeed):
+#
+#     def parse_gtfs(self) -> None:
+#         pass
 
 
 #endregion

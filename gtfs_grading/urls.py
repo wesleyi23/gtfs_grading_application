@@ -19,5 +19,6 @@ from gtfs_grading_app import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.home)
+    path('', views.home),
+    path('post_gtfs_zip/', views.post_gtfs_zip)
 ]
