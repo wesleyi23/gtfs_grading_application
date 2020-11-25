@@ -26,7 +26,7 @@ SECRET_KEY = 'z2d!t1l0(15fa_08q56-r=k82o-k5@qfh#%+*1#iwms564ag^5'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'gtfs_grading',
     'gtfs_grading_app.apps.GtfsGradingAppConfig',
 ]
 
@@ -119,5 +120,4 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
-
 STATIC_URL = '/static/'

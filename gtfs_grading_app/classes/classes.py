@@ -1,19 +1,17 @@
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 # from django.core.files import File
 from typing import final
 
 ####
-# This file contains abstract classes used in this application.
+# This file contains classes used in this application.
 #
-# For each abstract class in this file there is a folder which contains:
+# For each abstract class in this file there is a region below which contains:
 #   - A factory to generate the appropriate concrete class
-#   - A file for each implemented concrete class
+#   - Any classes derived from the abstract class
 #
-# Any all __init__ parameters that could be used for any
-#
-#
-#
-####
+#####
+
+#region AbstractClasses
 
 
 class GtfsFeed(ABC):
@@ -24,6 +22,26 @@ class GtfsFeed(ABC):
     so the interface methods in this abstract class can function.
     """
 
+    @final
+    def get_list_of_tables(self) -> None:
+        """Returns a list of tables in the GTFS feed"""
+        print("get_list_of_tables NotImplemented")
+        raise NotImplementedError
+
+    @final
+    def get_table(self, table_name) -> None:
+        """Gets a table by the provided table name"""
+        print("get_table NotImplemented")
+        raise NotImplementedError
+
+
+
+    @final
+    def get_row_by_table_and_index(self, table_name, row_index) -> None:
+        """Gets a row of data by the table name and index."""
+        print("get_row_by_table_and_index NotImplemented")
+        # raise NotImplementedError
+
     @abstractmethod
     def parse_gtfs(self) -> None:
         # if file:
@@ -32,37 +50,20 @@ class GtfsFeed(ABC):
         #   another class
         raise NotImplementedError
 
-    @final
-    def get_list_of_tables(self) -> None:
-        """Returns a list of tables in the GTFS feed"""
-        raise NotImplementedError
-
-    @final
-    def get_table(self, table_name) -> None:
-        """Gets a table by the provided table name"""
-        raise NotImplementedError
-
-    @final
-    def get_row_by_table_and_index(self, table_name, row_index) -> None:
-        """Gets a row of data by the table name and index."""
-        raise NotImplementedError
-
-
-
 
 class ReviewWidget(ABC):
     """A ReviewWidget presents all data a user needs from a GTFS feed to complete their review.
 
     Attributes:
-        review_fields: A list of ReviewFields that are the subject of the review
-        related_fields_same_table: A list of lists of ReviewFields from the same table as the review field
-        related_fields_different_table: A list of lists of ReviewFields from a different table as the review field
+        review_field_id: the review field that is the subject of the review
+        related_field_same_table_ids: A list of lists of GtfsField ids from the same table as the review field
+        related_field_other_table: a text description of the appropriate function to use to pull related fields in other tables
     """
 
-    def __init__(self, review_fields, related_fields_same_table, related_fields_different_table):
-        self.review_fields = review_fields
-        self.related_fields_same_table = related_fields_same_table
-        self.related_fields_different_table = related_fields_different_table
+    def __init__(self, review_field_id, related_field_same_table_ids=None, related_field_other_table=None):
+        self.review_field_id = review_field_id
+        self.related_field_same_table_ids = related_field_same_table_ids
+        self.related_field_other_table = related_field_other_table
 
     @abstractmethod
     def get_template_data(self) -> None:
@@ -163,6 +164,78 @@ class DataSelector(ABC):
     def get_gtfs_for_review(self) -> None:
         raise NotImplementedError
 
+#endregion
 
+
+#region ConcreteClasses
+
+
+#region GtfsFeed
+
+class GtfsUrlParser(GtfsFeed):
+
+    def parse_gtfs(self) -> None:
+        pass
+
+class GtfsFileParser(GtfsFeed):
+
+    def parse_gtfs(self) -> None:
+        pass
+
+
+#endregion
+
+
+#region ReviewWidget
+
+def review_widget_factory(review_field_id, related_field_same_table_ids=None, related_field_other_table=None):
+    """This factory produces the appropriate ReviewWidget based on the configuration data provided
+
+    Attributes:
+        review_field_id: the review field that is the subject of the review
+        related_field_same_table_ids: A list of lists of GtfsField ids from the same table as the review field
+        related_field_other_table: a text description of the appropriate function to use to pull related fields in other tables
+    """
+
+    if not related_field_same_table_ids and not related_field_other_table:
+        return SingleFieldReviewWidget(review_field_id)
+
+
+class SingleFieldReviewWidget(ReviewWidget):
+
+    def get_template_data(self) -> None:
+        pass
+
+    def get_template(self) -> None:
+        pass
+
+
+#endregion
+
+
+#region ReviewField
+
+
+#endregion
+
+
+#region ConsistencyWidget
+
+
+#endregion
+
+
+#region ResultsCaptureWidget
+
+
+#endregion
+
+
+#region DataSelector
+
+
+#endregion
+
+#endregion
 
 
