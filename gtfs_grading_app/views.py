@@ -11,9 +11,8 @@ def home(request):
             print("file received!")
     else:
         form = GtfsZipForm()
-    return render(request, 'base.html', {'form': form})
+    return render(request, 'file_upload.html', {'form': form})
 
-    return render(request, "base.html")
 
 
 

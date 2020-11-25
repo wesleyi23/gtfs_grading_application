@@ -7,7 +7,7 @@
   visibility: hidden;
   cursor: pointer;
   background-color: #c61c23;
-  box-shadow: 0 0 5px solid currentColor;
+  box-shadow: 0 0 5px currentColor;
 }
 .inputDnD .form-control-file:before {
   content: attr(data-title);
