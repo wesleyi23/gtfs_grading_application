@@ -15,7 +15,7 @@
             <table id="review_category_list">
                 <thead>
                 <tr>
-{#                    <th>Result review id</th>#}
+                    {#                    <th>Result review id</th>#}
                     <th>Field name</th>
                     <th>Table name</th>
                     <th>Review widget</th>
@@ -25,12 +25,14 @@
                 </thead>
                 <tbody>
                 {% for category in review_category %}
-{#                    <td>{{ category.id }}</td>#}
-                    <td>{{ category.gtfs_field.name }}</td>
-                    <td>{{ category.gtfs_field.table }}</td>
-                    <td><a href="{% url 'view_review_widget' category.review_widget.id %}">Details</a></td>
-                    <td><a href="{{ category.consistency_widget.id }}">Details</a></td>
-                    <td><a href="{{ category.results_capture_widget.id }}">Details</a></td>
+                    <tr>
+                        {#                    <td>{{ category.id }}</td>#}
+                        <td>{{ category.gtfs_field.name }}</td>
+                        <td>{{ category.gtfs_field.table }}</td>
+                        <td><a href="{% url 'view_review_widget' category.review_widget.id %}">Details</a></td>
+                        <td><a href="{{ category.consistency_widget.id }}">Details</a></td>
+                        <td><a href="{{ category.results_capture_widget.id }}">Details</a></td>
+                    </tr>
                 {% endfor %}
                 </tbody>
             </table>

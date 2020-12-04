@@ -2,11 +2,11 @@
 #
 # Could a review ever not be related to a field?  For example it is just about a table.
 #
-# Could a review evern not be related to a table? For example it is about the whole feed
+# Could a review ever not be related to a table? For example it is about the whole feed.
 #
 # Lets review the name of things on the add stuff form.
 #
-#
+# Talk about Schema - Frictionless | JSON-Schema
 #
 #
 #
