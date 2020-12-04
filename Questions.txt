@@ -6,9 +6,9 @@
 #
 # Lets review the name of things on the add stuff form.
 #
-# Talk about Schema - Frictionless | JSON-Schema - Confirm decision from Team
+# Talk about Schema - Frictionless | JSON-Schema - Confirm decision from the team
 #
-#
+# Talk about UI - How do we want to build\design this?
 #
 #
 #
