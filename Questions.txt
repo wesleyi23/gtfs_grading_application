@@ -1,4 +1,4 @@
-# Notes:
+# Sprint 1 - Questions:
 #
 # Could a review ever not be related to a field?  For example it is just about a table.
 #
@@ -6,7 +6,7 @@
 #
 # Lets review the name of things on the add stuff form.
 #
-# Talk about Schema - Frictionless | JSON-Schema
+# Talk about Schema - Frictionless | JSON-Schema - Confirm decision from Team
 #
 #
 #

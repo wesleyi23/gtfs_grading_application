@@ -12,13 +12,14 @@ from typing import final, Type
 #     review
 #   - ResultsCaptureWidget - A widget that captures the results of the review
 #
-# A review of an individual field might use any of the concrete implementations of each of these widgets for example:
+# A review of an individual field will use the concrete implementations of each of these widgets for example:
 #   - A field may need to be reviewed log10(n) times, have related data in the same table that needs to be displayed,
 #     a link to a best practice, and need a screen shot from a website that is captured during the review.
-#   - Another field might need to be reviewed 5 times, only display itself, have example pictures and capture only text.
+#   - Another field might need to be reviewed 5 times, only display itself, have vissual examples, and capture only a
+#     score and text.
 #   - A new field might come along that needs totally different functionality. Rather than updating the existing code to
-#     to meet these new requirements new concrete classes can be developed with easy, without needing to worry about
-#     breaking existing code.
+#     to meet these new requirements new concrete classes can be developed , without needing to worry about breaking
+#     existing code.
 #
 #
 # For each abstract class in this file there is also:
@@ -29,7 +30,7 @@ from typing import final, Type
 # region ReviewWidget
 
 class ReviewWidget(ABC):
-    """A ReviewWidget presents all data a user needs from a GTFS feed to complete their review."""
+    """A ReviewWidget presents all data from a GTFS feed a user needs to complete their review."""
 
     @abstractmethod
     def get_template_data(self) -> None:
@@ -70,7 +71,8 @@ class SingleFieldReviewWidget(ReviewWidget):
 
 
 class ReviewField(ABC):
-    """A ReviewField has all of the information about a field in a GTFS feed that is needed to display the field to the user"""
+    """A ReviewField has all of the information about a field in a GTFS feed that is needed by the application to
+    display that field. For example field is a color and needs a method to display it."""
 
     @abstractmethod
     def get_field_for_template(self) -> None:
@@ -103,7 +105,8 @@ class TextReviewField(ReviewField):
 
 
 class ConsistencyWidget(ABC):
-    """A consistency widget contains information that may be helpful to the reviewer as they complete their review"""
+    """A consistency widget contains information, not related to the GTFS Feed that may be helpful to the reviewer
+    as they complete their review.  It could include things like links, examples, or images."""
 
     @abstractmethod
     def get_template_data(self) -> None:
@@ -142,7 +145,7 @@ class DefaultConsistencyWidget(ConsistencyWidget):
 
 # region ResultsCaptureWidget
 class ResultsCaptureWidget(ABC):
-    """A results capture widget contains information and methods to the results of a review"""
+    """A results capture widget contains information and methods to record the results of a review"""
 
     @abstractmethod
     def get_result_capture_form(self) -> None:
@@ -182,7 +185,7 @@ class DefaultResultsCaptureWidget(ResultsCaptureWidget):
 # region DataSelector
 
 class DataSelector(ABC):
-    """DataSelector abstract class - for selecting data from GtfsFeeds"""
+    """DataSelector abstract class are variation of methods for selecting data from GTFS Feeds"""
 
     @abstractmethod
     def get_gtfs_for_review(self) -> None:
