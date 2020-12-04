@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_content %}
+{% endblock %}
+
+{% block content %}
+
+    <div class="card">
+        <div class="card-header">
+            <h2>Admin Page</h2>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Admin Options:</h5>
+            <ul>
+                <li><a href="{% url 'view_review_category' %}">View review categories</a></li>
+                <li><a href="{% url 'add_review_category' %}">Add review category</a></li>
+            </ul>
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block end_js %}
+{% endblock %}

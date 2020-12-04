@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_content %}
+{% endblock %}
+
+{% block content %}
+
+    <div class="card">
+        <div class="card-header">
+            <h2>View Widgets</h2>
+        </div>
+        <div class="card-body">
+            {% block review_widget_details %}
+            {% endblock %}
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block end_js %}
+{% endblock %}

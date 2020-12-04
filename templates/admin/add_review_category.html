@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_content %}
+{% endblock %}
+
+{% block content %}
+
+    <div class="card">
+        <div class="card-header">
+            <h2>Add review category</h2>
+        </div>
+        <div class="card-body">
+            <form ction="{% url 'add_review_category' %}" method="post">
+
+                <h3>Review category</h3>
+                {% csrf_token %}
+                {{ form_ReviewCategory.as_p}}
+                <hr>
+                <h3>Review widget</h3>
+                {{ form_ReviewWidget.as_ul }}
+                <hr>
+                <h3>Consistency widget</h3>
+                {{ form_AddConsistencyWidget.as_ul }}
+                <hr>
+                <h3>Results capture widget</h3>
+                {{ form_AddResultsCaptureWidget.as_ul }}
+
+                <input type="submit" value="OK">
+            </form>
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block end_js %}
+    <script>
+        $('#add_more').click(function() {
+            var form_idx = $('#id_form-TOTAL_FORMS').val();
+            $('#form_set').append($('#empty_form').html().replace(/__prefix__/g, form_idx));
+            $('#id_form-TOTAL_FORMS').val(parseInt(form_idx) + 1);
+        });
+    </script>
+
+{% endblock %}

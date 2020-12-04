@@ -1,69 +1,35 @@
 from abc import ABC, abstractmethod, ABCMeta
 # from django.core.files import File
-from typing import final
+from typing import final, Type
 
 ####
 # This file contains classes used in this application.
 #
-# For each abstract class in this file there is a region below which contains:
+# The application is organized around a number of abstract classes, representing widgets, that
+# are displayed to the end user. These include:
+#   - ReviewWidget - A widget to display information that is reviewed
+#   - ConsistencyWidget - A widget to display information that may be helpful to the reviewer while they complete their
+#     review
+#   - ResultsCaptureWidget - A widget that captures the results of the review
+#
+# A review of an individual field might use any of the concrete implementations of each of these widgets for example:
+#   - A field may need to be reviewed log10(n) times, have related data in the same table that needs to be displayed,
+#     a link to a best practice, and need a screen shot from a website that is captured during the review.
+#   - Another field might need to be reviewed 5 times, only display itself, have example pictures and capture only text.
+#   - A new field might come along that needs totally different functionality. Rather than updating the existing code to
+#     to meet these new requirements new concrete classes can be developed with easy, without needing to worry about
+#     breaking existing code.
+#
+#
+# For each abstract class in this file there is also:
 #   - A factory to generate the appropriate concrete class
 #   - Any classes derived from the abstract class
-#
 #####
 
-#region AbstractClasses
-
-# # Replaced by Partridge
-# class GtfsFeed(ABC):
-#     """GtfsFeed is an abstract class and/or interface working classes GTFS data and
-#
-#     It contains an interface for multiple methods of getting gtfs data which are parsed using the
-#     parse_gtfs_method.  Regardless of how GTFS data is parsed it should be in a consistent format
-#     so the interface methods in this abstract class can function.
-#     """
-#
-#     @final
-#     def get_list_of_tables(self) -> None:
-#         """Returns a list of tables in the GTFS feed"""
-#         print("get_list_of_tables NotImplemented")
-#         raise NotImplementedError
-#
-#     @final
-#     def get_table(self, table_name) -> None:
-#         """Gets a table by the provided table name"""
-#         print("get_table NotImplemented")
-#         raise NotImplementedError
-#
-#
-#
-#     @final
-#     def get_row_by_table_and_index(self, table_name, row_index) -> None:
-#         """Gets a row of data by the table name and index."""
-#         print("get_row_by_table_and_index NotImplemented")
-#         # raise NotImplementedError
-#
-#     @abstractmethod
-#     def parse_gtfs(self) -> None:
-#         # if file:
-#         #   one class
-#         # if url:
-#         #   another class
-#         raise NotImplementedError
-
+# region ReviewWidget
 
 class ReviewWidget(ABC):
-    """A ReviewWidget presents all data a user needs from a GTFS feed to complete their review.
-
-    Attributes:
-        review_field_id: the review field that is the subject of the review
-        related_field_same_table_ids: A list of lists of GtfsField ids from the same table as the review field
-        related_field_other_table: a text description of the appropriate function to use to pull related fields in other tables
-    """
-
-    def __init__(self, review_field_id, related_field_same_table_ids=None, related_field_other_table=None):
-        self.review_field_id = review_field_id
-        self.related_field_same_table_ids = related_field_same_table_ids
-        self.related_field_other_table = related_field_other_table
+    """A ReviewWidget presents all data a user needs from a GTFS feed to complete their review."""
 
     @abstractmethod
     def get_template_data(self) -> None:
@@ -76,24 +42,35 @@ class ReviewWidget(ABC):
         raise NotImplementedError
 
 
-class ReviewField(ABC):
-    """A ReviewField has all of the information about a field in a GTFS feed that is needed to display the field to the user
+def review_widget_factory(review_widget) -> ReviewWidget:
+    """This factory produces the appropriate ReviewWidget based on the configuration data stored in the review widget table
 
-    Attributes:
-        name: the name of the field
-        table: the name of the table the field is found in
-        field_type: the type of the field for example: text, int, color, url, ext
-        description: the description of the field that is subject to review
-        enum: an enumeration of the possible values of a field or None if their are many possible values
-        value: the actual value of the field that is displayed to the user
+    Args:
+        review_widget: an instance of the review widget model
     """
-    def __init__(self, name, table, field_type, description, enum, value):
-        self.name = name
-        self.table = table
-        self.field_type = field_type
-        self.description = description
-        self.enum = enum
-        self.value = value
+
+    if not review_widget.has_related_field_same_table and not review_widget.has_related_field_other_table:
+        return SingleFieldReviewWidget()
+    else:
+        raise NotImplementedError
+
+
+class SingleFieldReviewWidget(ReviewWidget):
+    """This class produces a review widget that only displays the field"""
+
+    def get_template_data(self) -> None:
+        pass
+
+    def get_template(self) -> None:
+        pass
+
+# endregion
+
+# region ReviewField
+
+
+class ReviewField(ABC):
+    """A ReviewField has all of the information about a field in a GTFS feed that is needed to display the field to the user"""
 
     @abstractmethod
     def get_field_for_template(self) -> None:
@@ -101,26 +78,32 @@ class ReviewField(ABC):
         raise NotImplementedError
 
 
-class ConsistencyWidget(ABC):
-    """A consistency widget contains information that may be helpful to the reviewer as they complete their review
+def review_field_factory(gtfs_field):
+    """This factory produces the appropriate ReviewWidget based on the configuration data provided
 
-    Attributes:
-        visual_examples: list of Base64 encoded images to be displayed in the ConsistencyWidget
-        link_urls: list of links to information
-        link_text: list of link text to display for URLs
-        link_descriptions: list of text to describe links
-        other_text: List of other text descriptions
-        consistency_template: the location of the template to use for the widget
+    Args:
+        gtfs_field: an instance of the gtfs_field model
     """
 
-    def __init__(self, visual_examples, link_urls, link_text, link_descriptions, other_text, consistency_template):
-        self.visual_examples = visual_examples
-        self.link_urls = link_urls
-        self.link_text = link_text
-        self.link_descriptions = link_descriptions
-        self.other_text = other_text
-        self.consistency_template = consistency_template
+    if gtfs_field.field_type == "Text":
+        return TextReviewField(gtfs_field)
 
+
+class TextReviewField(ReviewField):
+
+    def __init__(self, gtfs_field):
+        self.gtfs_field = gtfs_field
+
+    def get_field_for_template(self) -> None:
+        pass
+
+# endregion
+
+# region ConsistencyWidget
+
+
+class ConsistencyWidget(ABC):
+    """A consistency widget contains information that may be helpful to the reviewer as they complete their review"""
 
     @abstractmethod
     def get_template_data(self) -> None:
@@ -133,18 +116,33 @@ class ConsistencyWidget(ABC):
         raise NotImplementedError
 
 
-class ResultsCaptureWidget(ABC):
-    """A results capture widget contains information and methods to the results of a review
+def consistency_widget_factory(consistency_widget):
+    """This factory produces the appropriate ReviewWidget based on the configuration data provided
 
-    Attributes:
-        possible_scores: list of lists of possible scores
-        score_help_text: list score help text
+    Args:
+        consistency_widget: an instance of the consistency_widget model
     """
 
-    def __init__(self, possible_scores, score_help_text):
-        self.possible_scores = possible_scores
-        self.score_help_text = score_help_text
 
+    return DefaultConsistencyWidget(consistency_widget)
+
+
+class DefaultConsistencyWidget(ConsistencyWidget):
+
+    def __init__(self, consistency_widget):
+        self.consistency_widget = consistency_widget
+
+    def get_template_data(self) -> None:
+        pass
+
+    def get_template(self) -> None:
+        pass
+
+# endregion
+
+# region ResultsCaptureWidget
+class ResultsCaptureWidget(ABC):
+    """A results capture widget contains information and methods to the results of a review"""
 
     @abstractmethod
     def get_result_capture_form(self) -> None:
@@ -157,6 +155,32 @@ class ResultsCaptureWidget(ABC):
         raise NotImplementedError
 
 
+def results_capture_widget_factory(results_capture_widget):
+    """This factory produces the appropriate ReviewWidget based on the configuration data provided
+
+        Args:
+            results_capture_widget: an instance of the results_capture_widget model
+    """
+
+    return DefaultResultsCaptureWidget(results_capture_widget)
+
+
+class DefaultResultsCaptureWidget(ResultsCaptureWidget):
+
+    def __init__(self, results_capture_widget):
+        self.results_capture_widget = results_capture_widget
+
+    def get_result_capture_form(self) -> None:
+        pass
+
+    def get_result_capture_template(self) -> None:
+        pass
+
+
+# endregion
+
+# region DataSelector
+
 class DataSelector(ABC):
     """DataSelector abstract class - for selecting data from GtfsFeeds"""
 
@@ -164,79 +188,4 @@ class DataSelector(ABC):
     def get_gtfs_for_review(self) -> None:
         raise NotImplementedError
 
-#endregion
-
-
-#region ConcreteClasses
-
-
-#region GtfsFeed
-
-# # replaced by Partridge
-# class GtfsUrlParser(GtfsFeed):
-#
-#     def parse_gtfs(self) -> None:
-#         pass
-#
-# class GtfsFileParser(GtfsFeed):
-#
-#     def parse_gtfs(self) -> None:
-#         pass
-
-
-#endregion
-
-
-#region ReviewWidget
-
-def review_widget_factory(review_field_id, related_field_same_table_ids=None, related_field_other_table=None):
-    """This factory produces the appropriate ReviewWidget based on the configuration data provided
-
-    Attributes:
-        review_field_id: the review field that is the subject of the review
-        related_field_same_table_ids: A list of lists of GtfsField ids from the same table as the review field
-        related_field_other_table: a text description of the appropriate function to use to pull related fields in other tables
-    """
-
-    if not related_field_same_table_ids and not related_field_other_table:
-        return SingleFieldReviewWidget(review_field_id)
-
-
-class SingleFieldReviewWidget(ReviewWidget):
-
-    def get_template_data(self) -> None:
-        pass
-
-    def get_template(self) -> None:
-        pass
-
-
-#endregion
-
-
-#region ReviewField
-
-
-#endregion
-
-
-#region ConsistencyWidget
-
-
-#endregion
-
-
-#region ResultsCaptureWidget
-
-
-#endregion
-
-
-#region DataSelector
-
-
-#endregion
-
-#endregion
-
-
+# endregion

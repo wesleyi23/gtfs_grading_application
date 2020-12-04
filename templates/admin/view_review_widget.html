@@ -1,0 +1,16 @@
+{% extends "admin/view_widgets.html" %}
+{% load static %}
+
+{% block head_content %}
+{% endblock %}
+
+{% block review_widget_details %}
+    {{ review_widget.has_field }}
+    {{ review_widget.has_related_field_same_table }}
+    {% for field in review_widget.related_field_same_table.all %} {{ field.name }}{% endfor %}
+    {{ review_widget.has_related_field_other_table }}
+    {{ review_widget.related_field_other_table }}
+{% endblock %}
+
+{% block end_js %}
+{% endblock %}

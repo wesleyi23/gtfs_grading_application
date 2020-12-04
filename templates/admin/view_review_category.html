@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_content %}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css">
+{% endblock %}
+
+{% block content %}
+
+    <div class="card">
+        <div class="card-header">
+            <h2>View review categories</h2>
+        </div>
+        <div class="card-body">
+            <table id="review_category_list">
+                <thead>
+                <tr>
+{#                    <th>Result review id</th>#}
+                    <th>Field name</th>
+                    <th>Table name</th>
+                    <th>Review widget</th>
+                    <th>Consistency widget</th>
+                    <th>Results capture widget</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for category in review_category %}
+{#                    <td>{{ category.id }}</td>#}
+                    <td>{{ category.gtfs_field.name }}</td>
+                    <td>{{ category.gtfs_field.table }}</td>
+                    <td><a href="{% url 'view_review_widget' category.review_widget.id %}">Details</a></td>
+                    <td><a href="{{ category.consistency_widget.id }}">Details</a></td>
+                    <td><a href="{{ category.results_capture_widget.id }}">Details</a></td>
+                {% endfor %}
+                </tbody>
+            </table>
+
+
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block end_js %}
+    <script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready( function () {
+            $('#review_category_list').DataTable();
+        } );
+    </script>
+{% endblock %}

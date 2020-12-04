@@ -19,6 +19,10 @@ from gtfs_grading_app import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.home),
-    path('post_gtfs_zip/', views.post_gtfs_zip)
+    path('', name='home', view=views.home),
+    path('post_gtfs_zip/', name='post_gtfs', view=views.post_gtfs_zip),
+    path('gtfs_admin/', name='admin', view=views.gtfs_admin),
+    path('gtfs_admin/view_review_category/', name="view_review_category", view=views.ViewReviewCategory.as_view()),
+    path('gtfs_admin/add_review_category/', name="add_review_category", view=views.add_review_category),
+    path('gtfs_admin/view_review_widget/<int:pk>/', views.ViewReviewWidget.as_view(), name='view_review_widget'),
 ]

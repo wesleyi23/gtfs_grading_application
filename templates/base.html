@@ -19,13 +19,13 @@
     <title>GTFS Grading Application</title>
 </head>
 <body>
-<div class="cover-container d-flex h-100 p-3 flex-column text-center">
-    <header class="masthead mb-auto">
+<div class="container d-flex h-100 p-3 flex-column text-center">
+    <header class="masthead">
         <div class="inner">
             <h3 class="masthead-brand">GTFS Grading Application</h3>
             <nav class="nav nav-masthead justify-content-center">
-                <a class="nav-link active" href="#">Home</a>
-                <a class="nav-link" href="#">Admin</a>
+                <a class="nav-link" href="{% url 'home' %}">Home</a>
+                <a class="nav-link" href="{% url 'admin' %}">Admin</a>
                 <a class="nav-link" href="#">Contact</a>
             </nav>
         </div>
