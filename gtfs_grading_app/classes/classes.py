@@ -12,10 +12,15 @@ from typing import final, Type
 #     review
 #   - ResultsCaptureWidget - A widget that captures the results of the review
 #
-# A review of an individual field will use the concrete implementations of each of these widgets for example:
+# There are also two other abstract classes that facilitate reviews:
+#   - ReviewField - which enables the display of different types of data in GTFS feed. For example color and text.
+#   - DataSelector - which enables different methods for selecting data from a GTFS feed.
+#
+# A review of an individual field or other element will use the concrete implementations of each of these widgets for
+# example:
 #   - A field may need to be reviewed log10(n) times, have related data in the same table that needs to be displayed,
 #     a link to a best practice, and need a screen shot from a website that is captured during the review.
-#   - Another field might need to be reviewed 5 times, only display itself, have vissual examples, and capture only a
+#   - Another field might need to be reviewed 5 times, only display itself, have visual examples, and capture only a
 #     score and text.
 #   - A new field might come along that needs totally different functionality. Rather than updating the existing code to
 #     to meet these new requirements new concrete classes can be developed , without needing to worry about breaking
