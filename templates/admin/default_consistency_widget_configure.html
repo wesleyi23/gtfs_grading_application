@@ -1,0 +1,99 @@
+{% extends "admin/configure_widget.html" %}
+{% load static %}
+
+{% block head_content %}
+{% endblock %}
+
+{% block configuration_template %}
+    <div id="accordion">
+        {% if this_widget.model_instance.has_visual_example %}
+            <div class="card-header" id="headingOne">
+                <h3 class="mb-0">
+                    <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        Visual Examples
+                    </button>
+                </h3>
+            </div>
+
+            <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap">
+                        {% for i in forms.visual_example.1 %}
+
+                            <div class="card mr-2 mb-2" style="width: 18rem;">
+                                <img src="{{ i.image.url }}" class="card-img-top" alt="...">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ i.name }}</h5>
+                                    <p class="card-text">{{ i.description }}</p>
+                                </div>
+                                <a href="{% url 'delete_consistency_widget_visual_example' i.id %}"><i class="fas fa-trash-alt text-danger float-right mr-2 mb-2"></i></a>
+                            </div>
+
+                        {% endfor %}
+                    </div>
+
+                    <form action="{% url 'configure_widget' 'consistency' this_widget.model_instance.id %}" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ forms.visual_example.0 }}
+                        <input type="submit" value="Submit">
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+
+    {% if this_widget.model_instance.has_link %}
+        <div class="card">
+            <div class="card-header" id="headingTwo">
+                <h3 class="mb-0">
+                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                        Links
+                    </button>
+                </h3>
+            </div>
+            <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+                <div class="card-body">
+                    <ul>
+                        {% for i in forms.link.1 %}
+                            <a href="{{ i.url }}">{{ i.url_display_text }}</a> <a href="{% url 'delete_consistency_widget_link' i.id %}"><i class="fas fa-trash-alt text-danger ml-2"></i></a>
+                        {% endfor %}
+                    </ul>
+
+                    <form action="{% url 'configure_widget' 'consistency' this_widget.model_instance.id %}" method="POST">
+                        {% csrf_token %}
+                        {{ forms.link.0 }}
+                        <input type="submit" value="Submit">
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if this_widget.model_instance.has_other_text %}
+        <div class="card">
+            <div class="card-header" id="headingThree">
+                <h3 class="mb-0">
+                    <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                        Other text
+                    </button>
+                </h3>
+            </div>
+            <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+                <div class="card-body">
+                    <form action="{% url 'configure_widget' 'consistency' this_widget.model_instance.id %}" method="POST">
+                        {% csrf_token %}
+                        {{ forms.other_text.0 }}
+                        <input type="submit" value="Submit">
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    </div>
+{% endblock %}
+
+{% block sub_end_js %}
+    <script>
+        $('.collapse').collapse()
+    </script>
+{% endblock %}

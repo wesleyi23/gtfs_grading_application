@@ -1,0 +1,48 @@
+{% extends "admin/configure_widget.html" %}
+{% load static %}
+
+{% block head_content %}
+{% endblock %}
+
+{% block configuration_template %}
+    <div id="accordion">
+        {% if this_widget.model_instance.has_score %}
+            <div class="card-header" id="headingOne">
+                <h3 class="mb-0">
+                    <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        Score
+                    </button>
+                </h3>
+            </div>
+
+            <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+                <table>
+                    <thead>
+                    <th>Score</th>
+                    <th>Help Text</th>
+                    <th>Delete</th>
+                    </thead>
+                    <tbody>
+                    {% for i in forms.score.1 %}
+                        <td>{{ i.score }}</td>
+                        <td>{{ i.score_help_text }}</td>
+                        <td><a href="{% url 'delete_results_capture_score' i.id %}"><i class="fas fa-trash-alt text-danger ml-2"></i></a></td>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                <form action="{% url 'configure_widget' 'results_capture' this_widget.model_instance.id %}" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ forms.score.0 }}
+                    <input type="submit" value="Submit">
+                </form>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block sub_end_js %}
+    <script>
+        $('.collapse').collapse()
+    </script>
+{% endblock %}

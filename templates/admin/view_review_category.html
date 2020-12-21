@@ -21,6 +21,7 @@
                     <th>Review widget</th>
                     <th>Consistency widget</th>
                     <th>Results capture widget</th>
+                    <th>Delete</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -29,9 +30,10 @@
                         {#                    <td>{{ category.id }}</td>#}
                         <td>{{ category.gtfs_field.name }}</td>
                         <td>{{ category.gtfs_field.table }}</td>
-                        <td><a href="{% url 'view_review_widget' category.review_widget.id %}">Details</a></td>
-                        <td><a href="{{ category.consistency_widget.id }}">Details</a></td>
-                        <td><a href="{{ category.results_capture_widget.id }}">Details</a></td>
+                        <td><a href="{% url 'configure_widget' 'review' category.review_widget.id %}">Details</a></td>
+                        <td><a href="{% url 'configure_widget' 'consistency' category.consistency_widget.id %}">Details</a></td>
+                        <td><a href="{% url 'configure_widget' 'results_capture' category.results_capture_widget.id %}">Details</a></td>
+                        <td class="text-center"><a href="{% url 'delete_review_category' category.id %}"><i class="fas fa-trash-alt text-danger"></i></a></td>
                     </tr>
                 {% endfor %}
                 </tbody>

@@ -1,8 +1,12 @@
 # Sprint 1 - Questions:
 #
 # Could a review ever not be related to a field?  For example it is just about a table.
-#
+# No
 # Could a review ever not be related to a table? For example it is about the whole feed.
+# No
+#
+# What information do we want to capture about a review category?
+# Descrition / instructions (could be optional) where to look - what sources to use, where to look
 #
 # Lets review the name of things on the add stuff form.
 #
@@ -11,7 +15,9 @@
 # Talk about UI - How do we want to build\design this?
 #
 #
+# Notes:
+# Partrige requires certain files and we can add some thing to make loading more graceful
 #
-#
-#
-#
+# You can configure how partrige runs...
+# You have to have a short name and/or a long name
+# Select Agency IDs you care about for review

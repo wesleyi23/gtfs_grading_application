@@ -1,0 +1,55 @@
+{% extends "admin/configure_widget.html" %}
+{% load static %}
+
+{% block head_content %}
+{% endblock %}
+
+{% block configuration_template %}
+    <div id="accordion">
+        {% if this_widget.model_instance.has_related_field_same_table %}
+            <div class="card-header" id="headingOne">
+                <h3 class="mb-0">
+                    <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        Related field in the same table
+                    </button>
+                </h3>
+            </div>
+
+            <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+                <ul>
+                    {% for i in forms.related_field_same_table.1 %}
+                        <li>{{ i.name }} <a href="{% url 'delete_review_widget_related_field_same_table' this_widget.model_instance.id  i.id %}"><i class="fas fa-trash-alt text-danger ml-2"></i></a></li>
+                    {% endfor %}
+                </ul>
+
+                <form action="{% url 'configure_widget' 'review' this_widget.model_instance.id %}" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ forms.related_field_same_table.0 }}
+                    <input type="submit" value="Submit">
+                </form>
+            </div>
+        {% endif %}
+
+        {% if this_widget.model_instance.has_related_field_other_table %}
+            <div class="card">
+                <div class="card-header" id="headingTwo">
+                    <h3 class="mb-0">
+                        <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            Related field a different table
+                        </button>
+                    </h3>
+                </div>
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+                    <p class="ml-2">A related field in a differnt table can not be configured through the UI at this time. Please
+                        contact Ian Wesley at: <a href="mailto:wesleyi@wsdot.wa.gov?Subject=New%20related%20field%20in%20another%20table%20request">wesleyi@wsdot.wa.gov</a></p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block sub_end_js %}
+    <script>
+        $('.collapse').collapse()
+    </script>
+{% endblock %}

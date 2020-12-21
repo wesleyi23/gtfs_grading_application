@@ -1,17 +1,12 @@
 from django.db import models
 
 # Create your models here.
-from gtfs_grading_app.classes.classes import review_widget_factory, review_field_factory, consistency_widget_factory
 
 
 class gtfs_field(models.Model):
     name = models.CharField(max_length=150, null=False)
     table = models.CharField(max_length=150, null=False)
     type = models.CharField(max_length=150, null=False)
-
-    @property
-    def get_review_field(self):
-        return review_field_factory(self)
 
     def __str__(self):
         return self.name
@@ -24,9 +19,6 @@ class review_widget(models.Model):
     has_related_field_other_table = models.BooleanField(null=False, default=False)
     related_field_other_table = models.CharField(max_length=150, null=True) # named reference to a function that will be coded to select this data
 
-    def get_review_widget(self):
-        return review_widget_factory(self)
-
 
 class consistency_widget(models.Model):
     has_visual_example = models.BooleanField(null=False, default=False)
@@ -34,15 +26,12 @@ class consistency_widget(models.Model):
     has_other_text = models.BooleanField(null=False, default=False)
     other_text = models.CharField(max_length=500)
 
-    def get_consistency_widget(self):
-        consistency_widget_factory(self)
-
 
 class consistency_widget_visual_example(models.Model):
     consistency_widget = models.ForeignKey(consistency_widget, on_delete=models.PROTECT)
     name = models.CharField(max_length=150, null=False)
     description = models.CharField(max_length=150)
-    image = models.ImageField(null=False)
+    image = models.ImageField(null=False, upload_to='consistency_images/')
 
 
 class consistency_widget_link(models.Model):
@@ -55,6 +44,8 @@ class results_capture_widget(models.Model):
     has_score = models.BooleanField(null=False, default=True)
     has_score_reason = models.BooleanField(null=False, default=True)
     has_score_image = models.BooleanField(null=False, default=False)
+    has_reference_link = models.BooleanField(null=False, default=False)
+    has_reference_date = models.BooleanField(null=False, default=False)
 
 
 class score(models.Model):
@@ -71,9 +62,9 @@ class selected_rows(models.Model):
 class review_category(models.Model):
     gtfs_field = models.ForeignKey(gtfs_field, on_delete=models.PROTECT)
     review_table = models.CharField(max_length=150, null=False)
-    review_widget = models.OneToOneField(review_widget, on_delete=models.PROTECT)
-    consistency_widget = models.OneToOneField(consistency_widget, on_delete=models.PROTECT)
-    results_capture_widget = models.OneToOneField(results_capture_widget, on_delete=models.PROTECT)
+    review_widget = models.OneToOneField(review_widget, on_delete=models.CASCADE)
+    consistency_widget = models.OneToOneField(consistency_widget, on_delete=models.CASCADE)
+    results_capture_widget = models.OneToOneField(results_capture_widget, on_delete=models.CASCADE)
 
 
 class result(models.Model):

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_content %}
+{% endblock %}
+
+{% block content %}
+
+    <div class="card">
+        <div class="card-header">
+            <h2>Configure {{ this_widget.widget_type }} widget</h2>
+        </div>
+        <div class="card-body">
+            <h3>Widget settings:</h3>
+            <i>(read-only)</i>
+            {{ creation_form.as_ul }}
+            {% if not forms %}
+                <div class="alert alert-info" role="alert">
+                    This widget does not require any configuration.
+                </div>
+            {% else %}
+                {% block configuration_template %}
+
+                {% endblock %}
+            {% endif %}
+            {% if this_widget.get_previous_widget_id %}
+                <a class="btn btn-secondary" role="button" href="{% url 'configure_widget' this_widget.get_previous_widget_type this_widget.get_previous_widget_id %}">Previous widget</a>
+            {% endif %}
+            {% if this_widget.get_next_widget_type %}
+                <a class="btn btn-primary" role="button" href="{% url 'configure_widget' this_widget.get_next_widget_type this_widget.get_next_widget_id %}">Next widget</a>
+            {% else %}
+                <a class="btn btn-success" role="button" href="{% url 'view_review_category' %}">Finish configuration</a>
+            {% endif %}
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block end_js %}
+    {% block sub_end_js %}
+    {% endblock %}
+
+    <script>
+        $( document ).ready(function() {
+            console.log( "ready!" );
+            $(':checkbox').attr('readonly',true);
+            $(':checkbox').attr('disabled',true);
+        });
+    </script>
+
+{% endblock %}

@@ -42,5 +42,26 @@
             $('#id_form-TOTAL_FORMS').val(parseInt(form_idx) + 1);
         });
     </script>
+    <script>
+        jQuery(function($) {
+            var gtfs_field = {{ drop_down | safe }}
+            var $gtfs_field = $('#id_form_ReviewCategory-gtfs_field');
 
+            function update_dropdown(){
+                var gtfs_table = $('#id_form_ReviewCategory-review_table').val(), flds = gtfs_field[gtfs_table] || [];
+
+                var html = $.map(flds, function(fld){
+                    return '<option value="' + fld + '">' + fld + '</option>'
+                }).join('');
+                $gtfs_field.html(html);
+            };
+
+            $('#id_form_ReviewCategory-review_table').change(function () {
+                update_dropdown();
+            });
+            $( document ).ready(function() {
+                update_dropdown();
+            });
+        });
+    </script>
 {% endblock %}

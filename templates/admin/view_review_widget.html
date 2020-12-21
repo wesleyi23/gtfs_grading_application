@@ -4,12 +4,28 @@
 {% block head_content %}
 {% endblock %}
 
+
 {% block review_widget_details %}
-    {{ review_widget.has_field }}
-    {{ review_widget.has_related_field_same_table }}
-    {% for field in review_widget.related_field_same_table.all %} {{ field.name }}{% endfor %}
-    {{ review_widget.has_related_field_other_table }}
-    {{ review_widget.related_field_other_table }}
+    <table>
+        <tr>
+            <td>Table</td>
+            <td>{{ review_widget.review_category.gtfs_field.table }}</td>
+        <tr>
+            <td>Field</td>
+            <td>{{ review_widget.review_category.gtfs_field.name }}</td>
+        </tr>
+        <tr>
+            <td>Has related field in same table</td>
+            <td>{{ review_widget.has_related_field_same_table }}</td>
+        </tr>
+        <tr>
+            <td>Has related field in other table</td>
+            <td>{{ review_widget.has_related_field_other_table }}</td>
+        </tr>
+    </table>
+    <a class="btn btn-primary" role="button" href="{% url 'configure_widget' 'review' review_widget.id %}">Configure Widget</a>
+
+
 {% endblock %}
 
 {% block end_js %}

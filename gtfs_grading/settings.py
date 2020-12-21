@@ -13,6 +13,12 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 import os
 from django.contrib.messages import constants as messages
+from gtfs_grading_app.gtfs_spec.import_gtfs_spec import load_data_package, get_cascading_drop_down
+
+GTFS_SPEC_PATH = 'gtfs_grading_app/gtfs_spec/data-package.json'
+
+GTFS_SPEC = load_data_package(GTFS_SPEC_PATH)
+GTFS_FIELD_DROPDOWN = get_cascading_drop_down(GTFS_SPEC)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -67,6 +73,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media'
             ],
         },
     },
@@ -131,3 +138,7 @@ MESSAGE_TAGS = {
     messages.WARNING: 'alert-warning',
     messages.ERROR: 'alert-danger',
 }
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
