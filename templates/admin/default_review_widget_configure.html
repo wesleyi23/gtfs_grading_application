@@ -18,7 +18,7 @@
             <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
                 <ul>
                     {% for i in forms.related_field_same_table.1 %}
-                        <li>{{ i.name }} <a href="{% url 'delete_review_widget_related_field_same_table' this_widget.model_instance.id  i.id %}"><i class="fas fa-trash-alt text-danger ml-2"></i></a></li>
+                        <li>{{ i.name }} </li>
                     {% endfor %}
                 </ul>
 
@@ -40,11 +40,14 @@
                     </h3>
                 </div>
                 <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
-                    <p class="ml-2">A related field in a differnt table can not be configured through the UI at this time. Please
+                    <p class="ml-2">A related field in a different table can not be configured through the UI at this time. Please
                         contact Ian Wesley at: <a href="mailto:wesleyi@wsdot.wa.gov?Subject=New%20related%20field%20in%20another%20table%20request">wesleyi@wsdot.wa.gov</a></p>
                 </div>
             </div>
         {% endif %}
+
+
+
     </div>
 {% endblock %}
 

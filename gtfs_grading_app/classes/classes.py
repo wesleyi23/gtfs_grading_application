@@ -28,17 +28,21 @@
 #   - A factory to generate the appropriate concrete class
 #   - Any classes derived from the abstract class
 #####
-
+import math
+import tempfile
 from abc import ABC, abstractmethod, ABCMeta
 # from django.core.files import File
 from typing import final, Type, Union, List, Any, Dict
-from django.forms import forms
+# from django.forms import forms
 
-from gtfs_grading_app.forms import AddConsistencyWidgetVisualExample, AddConsistencyWidgetLink, \
-    AddConsistencyWidgetOtherText, AddReviewWidgetRelatedFieldSameTable, AddResultCaptureScore, AddReviewWidget, \
-    AddConsistencyWidget, AddResultsCaptureWidget
-from gtfs_grading_app.models import review_category, consistency_widget_visual_example, consistency_widget_link, score
+# from gtfs_grading_app.forms import AddConsistencyWidgetVisualExample, AddConsistencyWidgetLink, \
+#     AddConsistencyWidgetOtherText, AddReviewWidgetRelatedFieldSameTable, AddResultCaptureScore, AddReviewWidget, \
+#     AddConsistencyWidget, AddResultsCaptureWidget
+from django.db import transaction
 
+from gtfs_grading_app.models import review_category, consistency_widget_visual_example, consistency_widget_link, score, \
+    review, result, related_field
+import partridge as ptg # type: ignore
 
 # region ReviewWidget
 
@@ -65,73 +69,14 @@ class Widget(ABC):
         else:
             raise NotImplementedError
 
-    @property
-    def get_next_widget_type(self) -> Union[None, str]:
-        if self.widget_type == "review":
-            return "consistency"
-        elif self.widget_type == "consistency":
-            return "results_capture"
-        elif self.widget_type == "results_capture":
-            return None
-        else:
-            raise NotImplementedError
-
-    @property
-    def get_next_widget_id(self) -> Union[None, int]:
-        if self.widget_type == "review":
-            return review_category.objects.get(review_widget_id=self.model_instance.id).consistency_widget_id
-        elif self.widget_type == "consistency":
-            return review_category.objects.get(consistency_widget_id=self.model_instance.id).results_capture_widget_id
-        elif self.widget_type == "results_capture":
-            return None
-        else:
-            raise NotImplementedError
-
-    @property
-    def get_previous_widget_type(self) -> Union[None, str]:
-        if self.widget_type == "review":
-            return None
-        elif self.widget_type == "consistency":
-            return "review"
-        elif self.widget_type == "results_capture":
-            return "consistency"
-        else:
-            raise NotImplementedError
-
-    @property
-    def get_previous_widget_id(self) -> Union[None, int]:
-        if self.widget_type == "review":
-            return None
-        elif self.widget_type == "consistency":
-            return review_category.objects.get(consistency_widget_id=self.model_instance.id).review_widget_id
-        elif self.widget_type == "results_capture":
-            return review_category.objects.get(results_capture_widget_id=self.model_instance.id).consistency_widget_id
-        else:
-            raise NotImplementedError
-
-    def get_creation_form(self, *args, **kwargs):
-        if self.widget_type == "review":
-            return AddReviewWidget(*args, **kwargs)
-        elif self.widget_type == "consistency":
-            return AddConsistencyWidget(*args, **kwargs)
-        elif self.widget_type == "results_capture":
-            return AddResultsCaptureWidget(*args, **kwargs)
-        else:
-            raise NotImplementedError
-
     @abstractmethod
-    def get_template_data(self) -> Union[None, str]:
+    def get_template_context(self, active_result) -> Union[None, dict]:
         """returns data needed for django template to display this class"""
         raise NotImplementedError
 
     @abstractmethod
-    def get_template(self) -> None:
+    def get_template(self) -> Union[None, str]:
         """returns django template to display this class"""
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_configuration_form(self) -> Union[None, Dict[str, Any]]:
-        """returns django form to configure the widget"""
         raise NotImplementedError
 
 
@@ -148,34 +93,6 @@ class ReviewWidget(Widget):
     @property
     def model_instance(self):
         return self.my_review_widget
-
-    def get_configuration_form(self, request_post=None, request_files=None) -> Union[None, Dict[str, Any]]:
-        """returns django form to configure this widget """
-        my_forms = {}
-        my_gtfs_table_name = self.review_category.gtfs_field.table
-        if self.my_review_widget.has_related_field_same_table:
-            form = AddReviewWidgetRelatedFieldSameTable(request_post,
-                                                        my_gtfs_table_name=my_gtfs_table_name,  # type: ignore
-                                                        prefix="form_ReviewWidgetRelatedFieldSameTable",
-                                                        initial={'review_widget_id': self.my_review_widget.id})
-
-            template_data = self.my_review_widget.related_field_same_table.all()
-
-            my_forms['related_field_same_table'] = [form, template_data]
-
-
-        if self.my_review_widget.has_related_field_other_table:
-            my_forms['related_field_other_table'] = 'Yes' # type: ignore
-        if my_forms == {}:
-            return None
-        else:
-            return my_forms
-
-
-    def get_configuration_template(self) -> Union[None, str]:
-        """returns django template form to configure this widget"""
-        return 'admin/default_review_widget_configure.html'
-
 
 
 def review_widget_factory(review_widget) -> ReviewWidget:
@@ -194,22 +111,31 @@ def review_widget_factory(review_widget) -> ReviewWidget:
 class SingleFieldReviewWidget(ReviewWidget):
     """This class produces a review widget that only displays the field"""
 
-    def get_template_data(self) -> Union[None, str]:
+    def get_template_context(self, active_result) -> Union[None, dict]:
         pass
 
-    def get_template(self) -> None:
+    def get_template(self) -> Union[None, str]:
         pass
 
 
 class DefaultReviewWidget(ReviewWidget):
 
-    def get_template_data(self) -> Union[None, str]:
-        return None
+    def get_template(self) -> Union[None, str]:
+        return "review_widgets/default_review_widget.html"
 
-    def get_template(self) -> None:
-        pass
+    def get_template_context(self, active_result) -> Union[None, dict]:
+        active_gtfs_field = active_result.review_category.gtfs_field
+        review_field = review_field_factory(active_gtfs_field)
 
-# endregion
+        related_fields = related_field.objects.filter(result=active_result)
+
+        context = {'review_field_template': review_field.get_field_template(),
+                   'related_fields': related_fields}
+        context.update(review_field.get_template_context(active_result))
+
+        return context
+
+    # endregion
 
 # region ReviewField
 
@@ -219,9 +145,15 @@ class ReviewField(ABC):
     display that field. For example field is a color and needs a method to display it."""
 
     @abstractmethod
-    def get_field_for_template(self) -> None:
+    def get_field_template(self) -> Union[None, str]:
         """returns HTML for use in a template"""
         raise NotImplementedError
+
+    @abstractmethod
+    def get_template_context(self, active_result) -> Union[None, dict]:
+        """returns context for use in a template"""
+        raise NotImplementedError
+
 
 
 def review_field_factory(gtfs_field):
@@ -231,8 +163,10 @@ def review_field_factory(gtfs_field):
         gtfs_field: an instance of the gtfs_field model
     """
 
-    if gtfs_field.field_type == "Text":
+    if gtfs_field.type == "Text":
         return TextReviewField(gtfs_field)
+    else:
+        raise NotImplementedError
 
 
 class TextReviewField(ReviewField):
@@ -240,8 +174,13 @@ class TextReviewField(ReviewField):
     def __init__(self, gtfs_field):
         self.gtfs_field = gtfs_field
 
-    def get_field_for_template(self) -> None:
-        pass
+    def get_field_template(self) -> Union[None, str]:
+        return 'review_field/text.html'
+
+    def get_template_context(self, active_result) -> Union[None, dict]:
+        field_value = active_result.reviewed_data
+        return {'field_value': field_value}
+
 
 # endregion
 
@@ -262,40 +201,6 @@ class ConsistencyWidget(Widget):
     def model_instance(self):
         return self.my_consistency_widget
 
-    def get_configuration_form(self, request_post=None, request_files=None) -> Union[None, Dict[str, Any]]:
-        my_forms = {}
-        if self.my_consistency_widget.has_visual_example:
-            if request_post:
-                form = AddConsistencyWidgetVisualExample(request_post, request_files,
-                                                         prefix="form_AddConsistencyWidgetVisualExample",
-                                                         )
-            else:
-                form = AddConsistencyWidgetVisualExample(prefix="form_AddConsistencyWidgetVisualExample",
-                                                         initial={'consistency_widget': self.my_consistency_widget})# type: ignore
-            template_data = consistency_widget_visual_example.objects.filter(consistency_widget_id=self.my_consistency_widget.id)# type: ignore
-            my_forms['visual_example'] = [form, template_data] # type: ignore
-        if self.my_consistency_widget.has_link:
-            form = AddConsistencyWidgetLink(request_post, prefix="form_AddConsistencyWidgetLink",
-                                            initial={'consistency_widget': self.my_consistency_widget}) # type: ignore
-            template_data = consistency_widget_link.objects.filter(consistency_widget_id=self.my_consistency_widget.id)# type: ignore
-            my_forms['link'] = [form, template_data] # type: ignore
-        if self.my_consistency_widget.has_other_text:
-            if request_post:
-                form = AddConsistencyWidgetOtherText(request_post,
-                                                     prefix="form_AddConsistencyWidgetOtherText",
-                                                     instance=self.my_consistency_widget)# type: ignore
-            else:
-                form = AddConsistencyWidgetOtherText(prefix="form_AddConsistencyWidgetOtherText",
-                                                     instance=self.my_consistency_widget)# type: ignore
-            my_forms['other_text'] = [form, None] # type: ignore
-
-        if my_forms == {}:
-            my_forms = None # type: ignore
-        return my_forms
-
-    def get_configuration_template(self) -> Union[None, str]:
-        return 'admin/default_consistency_widget_configure.html'
-
 
 def consistency_widget_factory(consistency_widget):
     """This factory produces the appropriate ReviewWidget based on the configuration data provided
@@ -309,7 +214,7 @@ def consistency_widget_factory(consistency_widget):
 
 class DefaultConsistencyWidget(ConsistencyWidget):
 
-    def get_template_data(self) -> Union[None, str]:
+    def get_template_context(self, active_result) -> Union[None, dict]:
         return None
 
     def get_template(self) -> None:
@@ -333,25 +238,6 @@ class ResultsCaptureWidget(Widget):
         return self.my_results_capture_widget
 
 
-    def get_configuration_form(self, request_post=None, request_files=None) -> Union[None, Dict[str, Any]]:
-        """returns a django form or form factory that may be used to capture the results of a review"""
-        my_forms = {}
-        if self.my_results_capture_widget.has_score:
-            form = AddResultCaptureScore(request_post, prefix="form_AddResultCaptureScore",
-                                     initial={'results_capture_widget': self.my_results_capture_widget}) # type: ignore
-
-
-            template_data = score.objects.filter(results_capture_widget_id=self.my_results_capture_widget.id)# type: ignore
-            my_forms['score'] = [form, template_data] # type: ignore
-
-        if my_forms == {}:
-            my_forms = None # type: ignore
-        return my_forms
-
-    def get_configuration_template(self) -> Union[None, str]:
-        return 'admin/default_result_capture_configure.html'
-
-
 def results_capture_widget_factory(results_capture_widget):
     """This factory produces the appropriate ReviewWidget based on the configuration data provided
 
@@ -364,11 +250,12 @@ def results_capture_widget_factory(results_capture_widget):
 
 class DefaultResultsCaptureWidget(ResultsCaptureWidget):
 
-    def get_template(self) -> None:
-        pass
+    def get_template(self) -> str:
+        return "result_capture_widgets/default_result_capture_widget.html"
 
-    def get_template_data(self) -> Union[None, str]:
-        pass
+    def get_template_context(self, active_result) -> Union[None, dict]:
+        scores = score.objects.filter(results_capture_widget=self.my_results_capture_widget).order_by('score')
+        return {'scores': scores}
 
 
 
@@ -379,8 +266,110 @@ class DefaultResultsCaptureWidget(ResultsCaptureWidget):
 class DataSelector(ABC):
     """DataSelector abstract class are variation of methods for selecting data from GTFS Feeds"""
 
+    @staticmethod
+    def get_valid_choices_and_related_fields():
+        choices = (
+            ("log10(n) + 2", "log10(n) + 2"),
+            ("number", 'number')
+        )
+        related_fields = [None, 'number_to_review']
+        return choices, related_fields
+
     @abstractmethod
-    def get_gtfs_for_review(self) -> None:
+    def select_row_sample_count(self, total_row) -> int:
+        '''This method takes the total number of rows in a table and returns the number of rows to sample'''
         raise NotImplementedError
 
+
+    @staticmethod
+    def setup_initial_data_for_review(gtfs_feed_zip_file, agency, mode):
+        '''This method will select the initial set of data that will be reviewed from the provided GTFS zip file'''
+        my_review = review.objects.create(agency=agency,
+                                          mode=mode)
+        view = {
+            'agency.txt': {'agency_name': agency},
+            'routes.txt': {'route_type': mode},
+        }
+        new_tmp_dir = tempfile.mkdtemp()
+        outpath = new_tmp_dir
+        ptg.extract_feed(gtfs_feed_zip_file, outpath + "view.zip", view)
+        gtfs_feed = ptg.load_feed(gtfs_feed_zip_file)
+
+        new_session_gtfs_path = outpath + "view.zip"
+
+        for category in review_category.objects.all():
+            target_field_name = category.gtfs_field.name
+            target_table = category.gtfs_field.table
+            has_related_field_same_table = category.review_widget.has_related_field_same_table
+            has_related_field_other_table = category.review_widget.has_related_field_other_table
+            ptg_target_table = getattr(gtfs_feed, target_table.replace('.txt', ''))
+            total_table_rows = ptg_target_table.shape[0]
+            ds = data_selector_factory(category.data_selector)
+
+            number_to_sample = ds.select_row_sample_count(total_table_rows)
+            random_sample = ptg_target_table.sample(n=number_to_sample)
+
+            for index, row in random_sample.iterrows():
+                this_result = result.objects.create(review=my_review,
+                                                    review_category=category,
+                                                    reviewed_data=row[target_field_name])
+                if has_related_field_same_table:
+                    related_fields = category.review_widget.related_field_same_table.all()
+                    for field in related_fields:
+                        my_field = related_field.objects.create(gtfs_field=field,
+                                                                result=this_result,
+                                                                gtfs_field_value=row[field.name])
+
+                if has_related_field_other_table:
+                    raise NotImplementedError
+
+        return new_session_gtfs_path, my_review
+
+    def select_new_data_for_review(self, gtfs_feed, current_result_id):
+        '''This method will replace the specified current result with a new one from the gtfs_feed'''
+        raise NotImplementedError
+
+
+def data_selector_factory(data_selector):
+    """This factory produces the appropriate DataSelector based on the configuration data provided
+
+        Args:
+            data_selector: an instance of the data_selector model
+    """
+    if data_selector.name == "log10(n) + 2":
+        return LogPlusTwoDataSelector()
+
+    elif data_selector.name == "number":
+        return NumberDataSelector()
+
+    else:
+        raise NotImplementedError
+
+
+class LogPlusTwoDataSelector(DataSelector):
+
+    def __int__(self, data_selector):
+        self.data_selector = data_selector
+
+    def select_row_sample_count(self, total_row) -> int:
+        x = math.log10(total_row) + 2
+        print(x)
+        x = round(x)
+        if total_row > x:
+            return x
+        else:
+            return total_row
+
+
+class NumberDataSelector(DataSelector):
+
+    def __int__(self, data_selector):
+        self.data_selector = data_selector
+
+    def select_row_sample_count(self, total_row) -> int:
+        x = self.data_selector.number_to_review
+        if total_row > x:
+            return x
+        else:
+            return total_row
 # endregion

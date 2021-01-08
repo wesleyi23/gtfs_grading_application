@@ -1,0 +1,51 @@
+{% extends "home.html" %}
+{% load static %}
+
+{% block head_content %}
+{% endblock %}
+
+{% block content %}
+    <div class="container w-100">
+        <h1>About Sequoia</h1>
+        <div class="row">
+            <div class="col-7 d-flex align-items-stretch">
+                <div class="card">
+                    <div class="card-title">Standardizing and Improving GTFS Data</div>
+                    <div class="card-body card-body-about">
+                        <p>The General Transit Feed Specification (GTFS) allows transit agencies to describe their
+                            schedule operations for automated consumption by trip planning applications.</p>
+                        <p>When the schedule described in GTFS matches the schedule published in other formats, such as
+                            agency websites, printed PDFs, and physical signage, riders are able to confidently plan and
+                            execute their journeys. When these formats disagree, riders can become confused and lose
+                            confidence in transit.</p>
+
+                        <p>This tool allows anyone to consistently grade the consistency of an agency’s GTFS feed with
+                            other sources according to the methodology described in MobilityData’s GTFS Grading Scheme.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-5 d-flex align-items-stretch">
+                <div class="card">
+                    <div class="card-title">About</div>
+                    <div class="card-body card-body-about">
+                        <p>This project was collaboratively created by Washington State Department of Transportation and
+                            the California Integrated Travel Program (Cal-ITP), a project of Caltrans.</p>
+
+                        <p>Our codebase is available on GitHub.</p>
+                        <p>We welcome comments and contributions.</p>
+
+                        <p>This project, along with the giant redwood tree that grows on the western US coast, are named
+                            for the creator of the Cherokee writing system, which brought his nation visibility and
+                            resiliency.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+{% endblock %}
+
+{% block end_js %}
+{% endblock %}

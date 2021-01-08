@@ -1,0 +1,42 @@
+{% extends "home.html" %}
+{% load static %}
+{% load custom_tags %}
+
+{% block head_content %}
+{% endblock %}
+
+{% block content %}
+    <div class="container w-100">
+        <h1>Administration</h1>
+        <p>Review the elements that are part of the evaluation, or add more.</p>
+
+        <div class="row">
+            <div class='col-3'>
+                <div class="card table-card">
+                    <div class="card-body table-card">
+                        <table class="table review-select table-hover">
+                            {% for cat in existing_review_categories %}
+                                <tr class="{% if active_review == cat.id %}table-active{% endif %}" onclick="window.location='{% url 'admin_details' cat.id %}';">
+                                    <td class="review-select-number">{{ forloop.counter }}</td>
+                                    <td class="review-select-text">{{ cat.gtfs_field.name | field_name_to_label}}</td>
+                                </tr>
+                            {% endfor %}
+                            <tr class="{% if active_review == 'add_new' %}table-active{% endif %}" onclick="window.location='{% url 'admin_add_new' %}';">
+                                <td class="review-select-number">+</td>
+                                <td class="review-select-text">Add new</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-9">
+                {% block admin_details %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+
+

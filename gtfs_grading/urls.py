@@ -23,6 +23,11 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', name='home', view=views.home),
+    path('home/', name='new_home', view=views.new_home),
+    path('administration/', name='administration', view=views.administration),
+    path('administration/add_new', name='admin_add_new', view=views.amdin_add_new),
+    path('administration/details/<int:review_id>', name='admin_details', view=views.admin_details),
+    path('about/', name='about', view=views.about),
     path('post_gtfs_zip/', name='post_gtfs', view=views.post_gtfs_zip),
     path('gtfs_admin/', name='admin', view=views.gtfs_admin),
     path('gtfs_admin/view_review_category/', name="view_review_category", view=views.ViewReviewCategory.as_view()),
@@ -34,6 +39,11 @@ urlpatterns = [
     path('gtfs_admin/configure_widget/delete_consistency_widget_link/<int:link_id>/', name="delete_consistency_widget_link", view=views.delete_consistency_widget_link),
     path('gtfs_admin/configure_widget/delete_review_widget_related_field_same_table/<int:widget_id>/<int:field_id>/', name="delete_review_widget_related_field_same_table", view=views.delete_review_widget_related_field_same_table),
     path('gtfs_admin/configure_widget/delete_results_capture_score/<int:score_id>/', name="delete_results_capture_score", view=views.delete_results_capture_score),
+    path('start_new_evaluation/', name='start_new_evaluation', view=views.start_new_evaluation),
+    path('evaluate_feed/', name='evaluate_feed', view=views.evaluate_feed),
+    path('evaluate_feed/<int:review_id>/', name='evaluate_feed', view=views.evaluate_feed),
+    path('evaluate_feed/<int:review_id>/<int:active_review_category_id>/', name='evaluate_feed', view=views.evaluate_feed),
+    path('evaluate_feed/<int:review_id>/<int:active_review_category_id>/<int:active_result_number>', name='evaluate_feed', view=views.evaluate_feed)
 ]
 
 if settings.DEBUG:

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block page_content %}
+    <!-- Image and text -->
+    <nav class="navbar fixed-top navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                Sequoia
+            </a>
+        </div>
+    </nav>
+<div class="wrapper">
+
+    <!-- Sidebar -->
+    <nav id="sidebar">
+        <div style="padding-top: 7rem;" class="h-100 w-100">
+            <a class="nav-link {% if active_page == 'evaluate' %}active{% endif %}" href="{% url 'evaluate_feed' %}">Evaluate a New Feed</a>
+            <a class="nav-link {% if active_page == 'search' %}active{% endif %}" href="#">Search Completed Reviews</a>
+            <a class="nav-link {% if active_page == 'about' %}active{% endif %}" href="{% url 'about' %}">About Sequoia</a>
+            <a class="nav-link {% if active_page == 'admin' %}active{% endif %}" href="{% url 'administration' %}">Administration</a>
+        </div>
+
+        <div class="nav-image position-relative">
+            <img src="{% static 'images/sequoia.svg' %}" height="200px" class="position-absolute bottom-0 start-50 translate-middle">
+        </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div id="content" class="w-100">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+</div>
+
+{% endblock %}

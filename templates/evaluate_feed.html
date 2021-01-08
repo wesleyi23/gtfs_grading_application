@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+
+{% block head_content %}
+    <link rel="stylesheet" href="{% static 'css/file_upload_styles.css' %}">
+{% endblock %}
+
+{% block page_content %}
+    {% if previous_review_path %}
+        <a href="{{ previous_review_path }}">Previous</a>
+    {% endif %}
+    {% if next_review_path %}
+        <a href="{{ next_review_path }}">Next</a>
+    {% endif %}
+    <div class="container-fluid w-100 h-100" >
+        <div class="row">
+            <div id="review-area" class="col" style="height: 100vh">
+                <h1>{{ active_review_category.gtfs_field.field_name_to_label }} ({{ active_result_number }}/{{ max_items }})</h1>
+                <p><b>Evaluate This Element</b></p>
+                <p>Find this element in another resource published by the agency, such as their website or printed schedule.</p>
+                {% include review_widget_template %}
+
+                <p>Can’t find this element in another source? Skip it and try another.</p>
+                <hr>
+                <p><b>Select a Score</b></p>
+                <p>Examine the element above and determine how consistently it matches other sources.</p>
+                {% include result_capture_template %}
+            </div>
+
+            <div class="d-flex align-items-start flex-column col-3" style="height: 100vh; min-width: 250px">
+                <div class="p-2 bd-highlight" style="height: 275px">
+                    <h2 class="agency-name">{{ active_review.agency }}</h2>
+                    <div class="gtfs-progress-bar">
+                        40% complete
+                        <div class="progress" style="height:20px">
+                            <div class="progress-bar" style="width:40%;height:20px"></div>
+                        </div>
+                    </div>
+                    <hr style="margin-top: 2.5rem">
+                </div>
+
+                <div class="p-2 mb-auto mt-auto progress-table-container">
+                    <div class="progress-table">
+                        {% for cat in review_categories %}
+                            {% if cat.id == active_review_category.id %}
+                                <div class="progress-table-row">
+                                    <div class="progress-table-number number-circle">{{ forloop.counter }}</div>
+                                    <div class="progress-table-name">{{ cat.gtfs_field.name | field_name_to_label }}</div>
+                                </div>
+                            {% else %}
+                                <div class="progress-table-row">
+                                    <div class="progress-table-number">{{ forloop.counter }}</div>
+                                    <div class="progress-table-name">{{ cat.gtfs_field.name | field_name_to_label }}</div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+
+                    </div>
+                </div>
+                <div id="evaluation_logo" class="p-2" style="height:200px; width:100%">
+                    <hr>
+                    <img src="{% static 'sequia_with_text.svg' %}" class="mx-auto d-block" style="margin-bottom: 5rem">
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+{% endblock %}
+
+{% block end_js %}
+
+{% endblock %}

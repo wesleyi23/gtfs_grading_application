@@ -1,0 +1,57 @@
+{% extends "admin/administration.html" %}
+{% load static %}
+
+{% block head_content %}
+{% endblock %}
+
+{% block admin_details %}
+    <div class="card admin-review-card">
+        <div class="card-title" style="padding-left:0rem">Add new</div>
+        <p>Select a file and then a field to evaluate.</p>
+        <form action="" method="POST" class="form-inline">
+            {% csrf_token %}
+            {{ form.errors }}
+            <div class="row g-2">
+                <div class="col-md">
+                    <div class="form-floating">
+                        {{ form.review_table }}
+                        <label for="review_table">Table</label>
+                    </div>
+                </div>
+                <div class="col-md">
+                    <div class="form-floating">
+                        {{ form.gtfs_field }}
+                        <label for="review_field">Field</label>
+                    </div>
+                </div>
+            </div>
+            <input type="submit" value="Add   >" class="mt-2" style="float:right">
+        </form>
+    </div>
+
+{% endblock %}
+
+{% block end_js %}
+    <script>
+        jQuery(function($) {
+            var gtfs_field = {{ drop_down | safe }}
+            var $gtfs_field = $('#id_form_ReviewCategory-gtfs_field');
+
+            function update_dropdown(){
+                var gtfs_table = $('#id_form_ReviewCategory-review_table').val(), flds = gtfs_field[gtfs_table] || [];
+
+                var html = $.map(flds, function(fld){
+                    return '<option value="' + fld + '">' + fld + '</option>'
+                }).join('');
+                $gtfs_field.html(html);
+            };
+
+            $('#id_form_ReviewCategory-review_table').change(function () {
+                update_dropdown();
+            });
+            $( document ).ready(function() {
+                update_dropdown();
+            });
+        });
+    </script>
+{% endblock %}

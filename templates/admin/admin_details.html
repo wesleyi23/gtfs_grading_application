@@ -1,0 +1,175 @@
+{% extends "admin/administration.html" %}
+{% load static %}
+{% load custom_tags %}
+
+{% block admin_details %}
+    <div class="card admin-review-card">
+        <div class="card-title" style="padding-left:0rem">
+            {{ current_review.gtfs_field.name | field_name_to_label }} - {{ current_review.gtfs_field.table | capfirst }}
+        </div>
+        <div class="card-body w-100">
+
+            <p class="admin-heading">How should this review be sampled?</p>
+            <form action="{% url 'admin_details' active_review %}" method="post">
+                {% csrf_token %}
+                <div class="position-relative">
+                    <div class="form-group row">
+                        <div class="col-auto">
+                            {{ choose_data_selector.name }}
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-auto">
+                                <p id="number_label" class="admin-heading">How many should be sampled?</p>
+                                {{ choose_data_selector.number_to_review }}
+                            </div>
+                        </div>
+
+                    </div>
+                    <input class="position-absolute bottom-0 end-0" type="submit" value="Update" name='choose_data_selector'>
+                </div>
+            </form>
+
+            <hr class="admin-hr">
+            <p class="admin-heading">What scores are possible?</p>
+            <div class="table-responsive">
+                <table class="table score-table">
+                    <thead>
+                    <tr class="d-flex">
+                        <th class="col-2">Score</th>
+                        <th class="col-8">Description</th>
+                        <th class="col-2"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for score in scores %}
+                        <tr class="d-flex">
+                            <td class="col-2">{{ score.score }}</td>
+                            <td class="col-8">{{ score.help_text }}</td>
+                            <td class="col-2"><a href="{% url 'delete_results_capture_score' score.id %}"><i class="fas fa-minus-square ml-2 admin-add-subtract"></i></a></td>
+                        </tr>
+                    {% endfor %}
+                    <tr class="d-flex">
+                        <form action="{% url 'admin_details' active_review %}" method="post">
+                            {% csrf_token %}
+                            {{ add_score_form.results_capture_widget }}
+                            <td class="col-2">{{ add_score_form.score }}</td>
+                            <td class="col-8">{{ add_score_form.help_text }}</td>
+                            <td class="col-2">
+                                <button type="submit" class="btn" name='add_new_score' style="padding-left: 0px">
+                                    <i class="fa fa-plus-square admin-add-subtract"></i>
+                                </button>
+                        </form>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            {% if add_score_form.errors %}
+                {% for field in add_score_form %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger">
+                            <strong>{{ error|escape }}</strong>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in add_score_form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <hr class="admin-hr">
+            <p class="admin-heading">What other fields, from the same table, would help a user evaluate this element?</p>
+            <ul>
+                {% for i in related_fields_same_table %}
+                    <li style="width: 40%">
+                        <div class="row">
+                            <div class="col-10">
+                                {{ i.name }}
+                            </div>
+                            <div class="col-2 d-flex justify-content-center">
+                        <span style="">
+                            <a class="btn admin-add-subtract" href="{% url 'delete_review_widget_related_field_same_table' current_review.results_capture_widget.id  i.id %}"><i class="fas fa-minus-square admin-add-subtract ml-2"></i></a>
+                        </span>
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+                <form action="{% url 'admin_details' active_review %}" method="post">
+                    {% csrf_token %}
+                    {{ add_field_same_table_form.review_widget_id }}
+                    <li style="width: 40%">
+                        <div class="row">
+                            <div class="col-10">
+                                {{ add_field_same_table_form.field_name }}
+                            </div>
+                            <div class="col-2 d-flex justify-content-center">
+                                <button type="submit" class="btn admin-add-subtract" name='add_field_same_table'>
+                                    <i class="fa fa-plus-square admin-add-subtract"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    </li>
+                    {#                <td><input type="submit" value="Add field" name='add_field_same_table'></td>#}
+                </form>
+            </ul>
+
+            {% if add_field_same_table_form.errors %}
+                {% for field in add_field_same_table_form %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger">
+                            <strong>{{ error|escape }}</strong>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in add_field_same_table_form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            {#            <p class="ml-2">If you need to add a related field from a different table, please contact Ian Wesley at:#}
+            {#                <a href="mailto:wesleyi@wsdot.wa.gov?Subject=New%20related%20field%20in%20another%20table%20request">wesleyi@wsdot.wa.gov</a></p>#}
+            {#            <hr class="admin-hr">#}
+
+            <p class="admin-heading">Which of the following additional information will you need to capture about this review:</p>
+            <form action="{% url 'admin_details' active_review %}" method="post">
+                <div class="position-relative">
+                    {% csrf_token %}
+                    {{ update_results_capture_widget.as_ul }}
+                    <input class="position-absolute bottom-0 end-0" type="submit" value="Update" name='update_results_capture_widget'>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block end_js %}
+    {{ block.super }}
+    <script>
+        function updateShowHide(){
+            var selected_option = $('#id_choose_data_selector-name').val();
+
+            if (selected_option === 'log10(n) + 2') {
+                $('#id_choose_data_selector-number_to_review').hide();
+                $('#id_choose_data_selector-number_to_review').val(null);
+                $("#number_label").hide();
+            }
+            if (selected_option != 'log10(n) + 2') {
+                $("#id_choose_data_selector-number_to_review").show();
+                $("#number_label").show();
+            }
+        }
+        $( document ).ready(function() {
+            updateShowHide();
+        });
+
+        $("#id_choose_data_selector-name").change(function () {
+            updateShowHide();
+        })
+
+
+    </script>
+{% endblock %}
+

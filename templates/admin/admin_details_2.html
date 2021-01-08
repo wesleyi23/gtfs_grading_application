@@ -1,0 +1,35 @@
+{% extends "admin/administration.html" %}
+{% load static %}
+{% load custom_tags %}
+
+{% block admin_details %}
+<div class="card admin-review-card">
+        <div class="card-title" style="padding-left:0rem">
+            {{ current_review.gtfs_field.name | field_name_to_label }} - {{ current_review.gtfs_field.table | capfirst }}
+        </div>
+        <div class="card-body">
+        <p>How many should be sampled?</p>
+
+        <p>What scores are possible?</p>
+        <table class="table-responsive">
+        <thead>
+        <th>Score</th>
+        <th>Description</th>
+        <th></th>
+</thead>
+<tbody>
+{% for score in scores %}
+        <td></td>
+        <td></td>
+        <td></td>
+        {% endfor %}
+        </tbody>
+        </table>
+
+        </div>
+    </div>
+
+
+{% endblock %}
+
+

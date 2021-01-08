@@ -10,14 +10,228 @@ from django.contrib import messages
 # Create your views here.
 from django.views.generic import ListView, DetailView
 
+from gtfs_grading_app.Functions.functions import list_to_tuple_of_tuples, get_next_review_item, get_previous_review_item
 from gtfs_grading_app.classes.classes import review_widget_factory, consistency_widget_factory, \
-    results_capture_widget_factory
+    results_capture_widget_factory, ReviewWidget, DataSelector
 from gtfs_grading_app.forms import GtfsZipForm, AddReviewCategory, AddReviewWidget, AddConsistencyWidget, \
-    AddResultsCaptureWidget
+    AddResultsCaptureWidget, AddResultCaptureScore, AddReviewWidgetRelatedFieldSameTable, ChooseDataSelector, \
+    NewReviewForm, ResultForm
 from gtfs_grading_app.models import review_category, review_widget, consistency_widget, results_capture_widget, \
-    gtfs_field, consistency_widget_visual_example, consistency_widget_link, score
+    gtfs_field, consistency_widget_visual_example, consistency_widget_link, score, review, result
 
 from gtfs_grading_app.gtfs_spec.import_gtfs_spec import get_cascading_drop_down, get_field_type
+
+# TODO change name
+def new_home(request):
+    """Home page view"""
+
+    return render(request, 'home.html', {})
+
+def about(request):
+    """Home page view"""
+    active_page = 'about'
+    return render(request, 'about.html', {'active_page':active_page})
+
+def administration(request):
+    active_page = 'admin'
+    existing_review_categories = review_category.objects.select_related().all()
+
+    return render(request, 'admin/administration.html', {'active_page': active_page,
+                                                         'existing_review_categories': existing_review_categories})
+
+def amdin_add_new(request):
+    active_page = 'admin'
+    active_review = 'add_new'
+    drop_down = get_cascading_drop_down()
+
+    existing_review_categories = review_category.objects.select_related().all()
+
+    if request.POST:
+        form = AddReviewCategory(request.POST, prefix="form_ReviewCategory")
+        if form.is_valid():
+            form.save()
+    else:
+        form = AddReviewCategory(prefix="form_ReviewCategory")
+
+    return render(request, 'admin/admin_add_new.html', {'active_page': active_page,
+                                                        'active_review': active_review,
+                                                        'form': form,
+                                                        'drop_down': drop_down,
+                                                        'existing_review_categories': existing_review_categories})
+
+
+def admin_details(request, review_id):
+    active_page = 'admin'
+    existing_review_categories = review_category.objects.select_related().all()
+    current_review = review_category.objects.select_related().get(id=review_id)
+    active_review = current_review.id
+
+    scores = score.objects.filter(results_capture_widget_id=current_review.results_capture_widget_id).order_by('-score')
+
+
+    related_fields_same_table = current_review.review_widget.related_field_same_table.all()
+
+
+    choose_data_selector = ChooseDataSelector(my_review_category=current_review,
+                                              prefix="choose_data_selector",
+                                              initial={'name': current_review.data_selector.name,
+                                                       'number_to_review': current_review.data_selector.number_to_review})
+
+    add_score_form = AddResultCaptureScore(initial={
+        'results_capture_widget': current_review.results_capture_widget}, prefix='score_form')
+    add_field_same_table_form = AddReviewWidgetRelatedFieldSameTable(my_gtfs_table_name=current_review.gtfs_field.table,
+                                                                     prefix="field_same_table_form",
+                                                                     initial={'review_widget_id': current_review.review_widget.id})
+
+    update_results_capture_widget = AddResultsCaptureWidget(instance=current_review.results_capture_widget,
+                                                            prefix="update_results_capture_widget")
+
+
+    if request.POST:
+        if 'choose_data_selector' in request.POST:
+            choose_data_selector = ChooseDataSelector(request.POST,
+                                                      my_review_category=current_review,
+                                                      prefix="choose_data_selector",
+                                                      )
+            if choose_data_selector.is_valid():
+                choose_data_selector.save()
+                choose_data_selector = ChooseDataSelector(my_review_category=current_review,
+                                                          prefix="choose_data_selector",
+                                                          initial={'name': current_review.data_selector.name,
+                                                                   'number_to_review': current_review.data_selector.number_to_review})
+
+
+        if 'add_new_score' in request.POST:
+            add_score_form = AddResultCaptureScore(request.POST, prefix='score_form')
+            if add_score_form.is_valid():
+                add_score_form.save()
+                add_score_form = AddResultCaptureScore(initial={
+                    'results_capture_widget': current_review.results_capture_widget}, prefix='score_form')
+
+        if 'add_field_same_table' in request.POST:
+            add_field_same_table_form = AddReviewWidgetRelatedFieldSameTable(request.POST,
+                                                                             my_gtfs_table_name=current_review.gtfs_field.table,
+                                                                             prefix="field_same_table_form",
+                                                                             )
+            if add_field_same_table_form.is_valid():
+                add_field_same_table_form.save()
+                add_field_same_table_form = AddReviewWidgetRelatedFieldSameTable(my_gtfs_table_name=current_review.gtfs_field.table,
+                                                                                 prefix="field_same_table_form",
+                                                                                 initial={'review_widget_id': current_review.review_widget.id})
+            else:
+                raise ValueError
+
+        if 'update_results_capture_widget' in request.POST:
+            update_results_capture_widget = AddResultsCaptureWidget(request.POST,
+                                                                    instance=current_review.results_capture_widget,
+                                                                    prefix="update_results_capture_widget",
+                                                                    )
+            if update_results_capture_widget.is_valid():
+                update_results_capture_widget.save()
+                update_results_capture_widget = AddResultsCaptureWidget(instance=current_review.results_capture_widget,
+                                                                        prefix="update_results_capture_widget")
+
+    return render(request, 'admin/admin_details.html', {'active_page': active_page,
+                                                        'active_review': active_review,
+                                                        'current_review': current_review,
+                                                        'existing_review_categories': existing_review_categories,
+                                                        'choose_data_selector': choose_data_selector,
+                                                        'scores': scores,
+                                                        'add_score_form': add_score_form,
+                                                        'related_fields_same_table': related_fields_same_table,
+                                                        'add_field_same_table_form': add_field_same_table_form,
+                                                        'update_results_capture_widget': update_results_capture_widget})
+
+
+def evaluate_feed(request, review_id=None, active_review_category_id=None, active_result_number=None):
+    if review_id is None:
+        return redirect(start_new_evaluation)
+    if active_review_category_id is None:
+        active_review_category = review_category.objects.first()
+    else:
+        active_review_category = get_object_or_404(review_category, pk=active_review_category_id)
+    if active_result_number is None:
+        active_result_number = 1
+
+    active_review = get_object_or_404(review, pk=review_id)
+
+    review_categories = review_category.objects.all()
+    results = result.objects.filter(review_id=review_id, review_category_id=active_review_category.id)
+    active_result = results[active_result_number-1]
+    max_items = results.count()
+
+    # one result form for all widgets save method in forms
+    #   The form lives at this level - scores and display of the form lives within the result capture widget
+    form = ResultForm(initial={'result_id': active_result.id})
+
+    active_review_widget = review_widget_factory(active_review_category.review_widget)
+    review_widget_template = active_review_widget.get_template()
+    review_widget_context = active_review_widget.get_template_context(active_result)
+
+    active_result_capture_widget = results_capture_widget_factory(active_review_category.results_capture_widget)
+    result_capture_template = active_result_capture_widget.get_template()
+    result_capture_context = active_result_capture_widget.get_template_context(active_result)
+
+    next_review_path = get_next_review_item(active_result_number,
+                                            max_items,
+                                            active_review,
+                                            active_review_category,
+                                            review_categories)
+    previous_review_path = get_previous_review_item(active_result_number,
+                                                    max_items,
+                                                    active_review,
+                                                    active_review_category,
+                                                    review_categories)
+
+
+    context = {'active_review': active_review,
+               'review_categories': review_categories,
+               'active_review_category': active_review_category,
+               'active_result': active_result,
+               'active_result_number': active_result_number,
+               'max_items': max_items,
+               'review_widget_template': review_widget_template,
+               'result_capture_template': result_capture_template,
+               'form': form,
+               'next_review_path': next_review_path,
+               'previous_review_path': previous_review_path}
+
+    context.update(review_widget_context)
+    context.update(result_capture_context)
+
+    return render(request, 'evaluate_feed.html', context)
+
+
+def start_new_evaluation(request):
+    tmp_dir = request.session['gtfs_feed']
+    gtfs_feed = ptg.load_feed(tmp_dir)
+    agency_options = gtfs_feed.agency['agency_name'].tolist()
+    agency_options = list_to_tuple_of_tuples(agency_options)
+    mode_options = list(set(gtfs_feed.routes['route_type'].tolist()))
+    mode_options = list_to_tuple_of_tuples(mode_options)
+    if request.POST:
+        my_new_review_form = NewReviewForm(request.POST, agency_options=agency_options, mode_options=mode_options)
+        if my_new_review_form.is_valid():
+            agency_name = my_new_review_form.cleaned_data['agency']
+            mode = my_new_review_form.cleaned_data['mode']
+            new_session_gtfs_path, my_review = DataSelector.setup_initial_data_for_review(request.session['gtfs_feed'],
+                                                                                          agency_name,
+                                                                                          mode)
+            request.session['gtfs_feed'] = new_session_gtfs_path
+            return redirect(evaluate_feed, review_id=my_review.id)
+
+    if request.session.get('gtfs_feed', None):
+        tmp_dir = request.session['gtfs_feed']
+        gtfs_feed = ptg.load_feed(tmp_dir)
+        agency_options = gtfs_feed.agency['agency_name'].tolist()
+        agency_options = list_to_tuple_of_tuples(agency_options)
+        mode_options = list(set(gtfs_feed.routes['route_type'].tolist()))
+        mode_options = list_to_tuple_of_tuples(mode_options)
+        my_new_review_form = NewReviewForm(agency_options=agency_options, mode_options=mode_options)
+    else:
+        my_new_review_form = None
+
+    return render(request, 'start_new_evaluation.html', {'my_new_review_form': my_new_review_form})
 
 
 def home(request):
@@ -55,7 +269,7 @@ def post_gtfs_zip(request):
             messages.error(request,
                            'There was an error uploading your GTFS feed.  Please be sure you submitted a valid .zip GTFS file and try again.')
 
-        return redirect(home)
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
 def gtfs_admin(request):
@@ -200,3 +414,4 @@ def delete_results_capture_score(request, score_id):
     my_score.delete()
     messages.success(request, 'The score has been deleted')
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
