@@ -67,10 +67,14 @@ class consistency_widget_link(models.Model):
 
 
 class results_capture_widget(models.Model):
-    has_score_reason = models.BooleanField(null=False, default=True)
-    has_score_image = models.BooleanField(null=False, default=False)
-    has_reference_link = models.BooleanField(null=False, default=False)
-    has_reference_date = models.BooleanField(null=False, default=False)
+    CHOICES = ((None, None),
+               ("Optional", "Optional"),
+               ("Required", "Required"))
+
+    has_score_reason = models.CharField(null=True, blank=True, max_length=50, choices=CHOICES, default="Optional")
+    has_score_image = models.CharField(null=True, blank=True, max_length=50, choices=CHOICES, default=None)
+    has_reference_link = models.CharField(null=True, blank=True, max_length=50, choices=CHOICES, default=None)
+    has_reference_date = models.CharField(null=True, blank=True, max_length=50, choices=CHOICES, default=None)
 
     @property
     def has_score(self):
@@ -97,10 +101,15 @@ class review_category(models.Model):
 
 
 class review(models.Model):
+    CHOICES = (("In progress", "In progress"),
+               ("Completed", "Completed"))
+
     agency = models.CharField(max_length=150, null=False)
     mode = models.IntegerField()
     created_date = models.DateTimeField(auto_now_add=True)
+    review_status = models.CharField(null=False, max_length=50, default="In progress", choices=CHOICES)
     completed_date = models.DateTimeField(null=True)
+    final_score = models.FloatField(null=True)
 
 
 class result(models.Model):
@@ -119,14 +128,15 @@ class related_field(models.Model):
 
 class result_image(models.Model):
     result = models.ForeignKey(result, on_delete=models.PROTECT)
-    image = models.ImageField(null=False)
+    image = models.ImageField(null=False, upload_to='result_images')
 
 
 class result_reference(models.Model):
     result = models.ForeignKey(result, on_delete=models.PROTECT)
     reference_name = models.CharField(null=True, max_length=200)
     url = models.URLField()
-    published_reference_date = models.DateTimeField(auto_now_add=True)
+    published_reference_date = models.DateTimeField(null=True)
+
 
 
 

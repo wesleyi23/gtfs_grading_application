@@ -40,10 +40,17 @@ urlpatterns = [
     path('gtfs_admin/configure_widget/delete_review_widget_related_field_same_table/<int:widget_id>/<int:field_id>/', name="delete_review_widget_related_field_same_table", view=views.delete_review_widget_related_field_same_table),
     path('gtfs_admin/configure_widget/delete_results_capture_score/<int:score_id>/', name="delete_results_capture_score", view=views.delete_results_capture_score),
     path('start_new_evaluation/', name='start_new_evaluation', view=views.start_new_evaluation),
+    # path('start_new_evaluation/<str:new_file>', name='start_new_evaluation_new_file', view=views.start_new_evaluation),
     path('evaluate_feed/', name='evaluate_feed', view=views.evaluate_feed),
     path('evaluate_feed/<int:review_id>/', name='evaluate_feed', view=views.evaluate_feed),
     path('evaluate_feed/<int:review_id>/<int:active_review_category_id>/', name='evaluate_feed', view=views.evaluate_feed),
-    path('evaluate_feed/<int:review_id>/<int:active_review_category_id>/<int:active_result_number>', name='evaluate_feed', view=views.evaluate_feed)
+    path('evaluate_feed/<int:review_id>/<int:active_review_category_id>/<int:active_result_number>', name='evaluate_feed', view=views.evaluate_feed),
+    path('review/<int:review_id>/', name='review_evaluation_results', view=views.review_evaluation_results),
+    path('review/<int:review_id>/<int:active_result_id>/', name='review_evaluation_results', view=views.review_evaluation_results),
+    path('mark_review_complete/<int:review_id>/', name='mark_review_complete', view=views.mark_review_complete),
+    path('search_competed_review/', name='search_competed_review', view=views.search_competed_review),
+    path('view_completed_review/<int:review_id>/', name='view_completed_review', view=views.view_completed_review),
+    path('view_completed_review/<int:review_id>/<int:active_result_id>/', name='view_completed_review', view=views.view_completed_review)
 ]
 
 if settings.DEBUG:

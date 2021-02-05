@@ -1,14 +1,13 @@
 from django import forms
 
 from gtfs_grading import settings
-from gtfs_grading_app.Functions.functions import list_to_tuple_of_tuples
 
 from gtfs_grading_app.models import review_category, review_widget, consistency_widget, results_capture_widget, \
     gtfs_field, consistency_widget_visual_example, consistency_widget_link, score, data_selector, result, result_image, \
     result_reference
 from gtfs_grading_app.gtfs_spec.import_gtfs_spec import get_gtfs_table_tuple, get_field_type, \
     get_gtfs_field_tuple_from_table, get_all_gtfs_field_tuple
-from gtfs_grading_app.classes.classes import DataSelector
+from gtfs_grading_app.classes.classes import DataSelector # type: ignore
 
 class GtfsZipForm(forms.Form):
     file = forms.FileField()
@@ -81,6 +80,10 @@ class AddResultsCaptureWidget(forms.ModelForm):
     class Meta:
         model = results_capture_widget
         exclude = ['']
+        widgets = {'has_score_reason': forms.Select(attrs={'class': 'form-select form-select-sm custom-select-sm'}),
+                   'has_score_image': forms.Select(attrs={'class': 'form-select form-select-sm custom-select-sm'}),
+                   'has_reference_link': forms.Select(attrs={'class': 'form-select form-select-sm custom-select-sm'}),
+                   'has_reference_date': forms.Select(attrs={'class': 'form-select form-select-sm custom-select-sm'})}
 
 
 class AddConsistencyWidgetVisualExample(forms.ModelForm):
@@ -163,7 +166,6 @@ class NewReviewForm(forms.Form):
         agency_options_choices = kwargs.pop('agency_options')
         mode_options_choices = kwargs.pop('mode_options')
 
-
         super(NewReviewForm, self).__init__(*args, **kwargs)
         self.fields['agency'] = forms.ChoiceField(choices=agency_options_choices,
                                                   label='Agency',
@@ -177,13 +179,35 @@ class NewReviewForm(forms.Form):
 
 class ResultForm(forms.Form):
 
-    result_id = forms.IntegerField(required=True, widget=forms.NumberInput())
-    score_id = forms.IntegerField(required=True, widget=forms.NumberInput())
-    score_reason = forms.Textarea()
-    image = forms.ImageField()
-    reference_name = forms.CharField()
-    reference_url = forms.URLField()
-    published_reference_date = forms.DateField()
+    def __init__(self, *args, **kwargs):
+
+        my_results_capture_widget = kwargs.pop('results_capture_widget')
+        super(ResultForm, self).__init__(*args, **kwargs)
+
+        self.fields['result_id'] = forms.IntegerField(required=True, widget=forms.HiddenInput())
+        self.fields['review_category_id'] = forms.IntegerField(required=True, widget=forms.HiddenInput())
+        self.fields['score_id'] = forms.IntegerField(required=True, label='', widget=forms.NumberInput(attrs={'class': 'score-id-form-field'}))
+
+        if my_results_capture_widget.has_score_image in ['Optional', 'Required']:
+            self.fields['image'] = forms.ImageField()
+        if my_results_capture_widget.has_reference_link in ['Optional', 'Required']:
+            self.fields['reference_name'] = forms.CharField()
+            self.fields['reference_url'] = forms.URLField(widget=forms.URLInput)
+        if my_results_capture_widget.has_reference_date in ['Optional', 'Required']:
+            self.fields['published_reference_date'] = forms.DateField(widget=forms.DateInput(attrs={'class': 'datepicker'}))
+        if my_results_capture_widget.has_score_reason in ['Optional', 'Required']:
+            self.fields['score_reason'] = forms.CharField(widget=forms.Textarea)
+
+        if my_results_capture_widget.has_score_image == 'Optional':
+            self.fields['image'].required = False
+        if my_results_capture_widget.has_reference_link == 'Optional':
+            self.fields['reference_name'].required = False
+            self.fields['reference_url'].required = False
+        if my_results_capture_widget.has_reference_date == 'Optional':
+            self.fields['published_reference_date'].required = False
+        if my_results_capture_widget.has_score_reason == 'Optional':
+            self.fields['score_reason'].required = False
+
 
     def __save__(self):
         my_review_category = review_category.objects.get(id=self.cleaned_data['review_category_id'])
@@ -191,17 +215,24 @@ class ResultForm(forms.Form):
         my_result = result.objects.get(id=self.cleaned_data['result_id'])
         my_result.score_id = self.cleaned_data['score_id']
 
-        if my_results_capture_widget.has_score_reason:
+        if my_results_capture_widget.has_score_reason in ['Optional', 'Required']:
             my_result.score_reason = self.cleaned_data['score_reason']
-        if my_results_capture_widget.has_score_image:
-            result_image.objects.create(image=self.cleaned_data['image'],
-                                        result_id=self.cleaned_data['result_id'])
-        if my_result.has_reference_link:
-            r = result_reference.objects.create(reference_name=self.cleaned_data['reference_name'],
-                                                url=self.cleaned_data['reference_url'])
-            if my_result.has_reference_date:
-                r.published_reference_date = self.cleaned_data['published_reference_date']
-                r.save()
+        if my_results_capture_widget.has_score_image in ['Optional', 'Required']:
+            if self.cleaned_data['image']:
+                image, created = result_image.objects.get_or_create(result_id=self.cleaned_data['result_id'])
+                image.image = self.cleaned_data['image']
+                image.save()
+
+        my_result.save()
+        if my_results_capture_widget.has_reference_link in ['Optional', 'Required']:
+            reference, created = result_reference.objects.get_or_create(result_id=self.cleaned_data['result_id'])
+            reference.reference_name = self.cleaned_data['reference_name']
+            reference.url = self.cleaned_data['reference_url']
+            reference.save()
+            if my_results_capture_widget.has_reference_date in ['Optional', 'Required']:
+                reference.published_reference_date = self.cleaned_data['published_reference_date']
+            reference.save()
+
 
 
 

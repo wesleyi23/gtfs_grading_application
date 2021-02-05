@@ -1,15 +1,20 @@
 {% load custom_tags %}
-<div class="card">
-    <div class="card-body">
-        <div class="row">
-            <div class="col">
-                {% include review_field_template %}
-            </div>
-            <div class="col">
-                {% for field in related_fields %}
-                    <p>{{ field.gtfs_field_id | get_gtfs_field_name_from_id }}: {{ field.gtfs_field_value }}</p>
-                {% endfor %}
+<div class="row">
+        <div class="col-auto">
+            <div class="card review-card">
+            <div class="card-body review-card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        {% include review_field_template %}
+                    </div>
+                    <div class="col-auto">
+                        {% for field in related_fields %}
+                            <p>{{ field.gtfs_field_id | get_gtfs_field_name_from_id }}: {{ field.gtfs_field_value }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
         </div>
+        <div class="col-auto"></div>
     </div>
 </div>

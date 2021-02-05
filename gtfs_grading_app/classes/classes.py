@@ -40,8 +40,10 @@ from typing import final, Type, Union, List, Any, Dict
 #     AddConsistencyWidget, AddResultsCaptureWidget
 from django.db import transaction
 
+from gtfs_grading import settings
+from gtfs_grading_app.gtfs_spec.import_gtfs_spec import get_field_type
 from gtfs_grading_app.models import review_category, consistency_widget_visual_example, consistency_widget_link, score, \
-    review, result, related_field
+    review, result, related_field, gtfs_field
 import partridge as ptg # type: ignore
 
 # region ReviewWidget
@@ -70,7 +72,7 @@ class Widget(ABC):
             raise NotImplementedError
 
     @abstractmethod
-    def get_template_context(self, active_result) -> Union[None, dict]:
+    def get_template_context(self) -> Union[None, dict]:
         """returns data needed for django template to display this class"""
         raise NotImplementedError
 
@@ -87,35 +89,37 @@ class ReviewWidget(Widget):
     def widget_type(self):
         return 'review'
 
-    def __init__(self, my_review_widget):
+    def __init__(self, my_review_widget, active_result):
         self.my_review_widget = my_review_widget
+        self.active_result = active_result
 
     @property
     def model_instance(self):
         return self.my_review_widget
 
 
-def review_widget_factory(review_widget) -> ReviewWidget:
+def review_widget_factory(review_widget, active_result) -> ReviewWidget:
     """This factory produces the appropriate ReviewWidget based on the configuration data stored in the review widget table
 
     Args:
         review_widget: an instance of the review widget model
+        active_result: the active result instance that is being reviewed
     """
 
     if not review_widget.has_related_field_same_table and not review_widget.has_related_field_other_table:
-        return SingleFieldReviewWidget(review_widget)
+        return SingleFieldReviewWidget(review_widget, active_result)
     else:
-        return DefaultReviewWidget(review_widget)
+        return DefaultReviewWidget(review_widget, active_result)
 
 
 class SingleFieldReviewWidget(ReviewWidget):
     """This class produces a review widget that only displays the field"""
 
-    def get_template_context(self, active_result) -> Union[None, dict]:
-        pass
+    def get_template_context(self) -> Union[None, dict]:
+        raise NotImplementedError
 
     def get_template(self) -> Union[None, str]:
-        pass
+        raise NotImplementedError
 
 
 class DefaultReviewWidget(ReviewWidget):
@@ -123,15 +127,15 @@ class DefaultReviewWidget(ReviewWidget):
     def get_template(self) -> Union[None, str]:
         return "review_widgets/default_review_widget.html"
 
-    def get_template_context(self, active_result) -> Union[None, dict]:
-        active_gtfs_field = active_result.review_category.gtfs_field
-        review_field = review_field_factory(active_gtfs_field)
+    def get_template_context(self) -> Union[None, dict]:
+        active_gtfs_field = self.active_result.review_category.gtfs_field
+        review_field = review_field_factory(active_gtfs_field, self.active_result)
 
-        related_fields = related_field.objects.filter(result=active_result)
+        related_fields = related_field.objects.filter(result=self.active_result)
 
         context = {'review_field_template': review_field.get_field_template(),
                    'related_fields': related_fields}
-        context.update(review_field.get_template_context(active_result))
+        context.update(review_field.get_template_context())
 
         return context
 
@@ -150,36 +154,108 @@ class ReviewField(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_template_context(self, active_result) -> Union[None, dict]:
+    def get_template_context(self) -> Union[None, dict]:
         """returns context for use in a template"""
         raise NotImplementedError
 
+    @staticmethod
+    def get_field_value(value) -> str:
+        if value is None:
+            return '[blank]'
+        else:
+            return value
 
 
-def review_field_factory(gtfs_field):
+def review_field_factory(gtfs_field, active_result):
     """This factory produces the appropriate ReviewWidget based on the configuration data provided
 
     Args:
         gtfs_field: an instance of the gtfs_field model
+        active_result: an instance of the result model that is being reviewed
     """
 
     if gtfs_field.type == "Text":
-        return TextReviewField(gtfs_field)
+        return TextReviewField(gtfs_field, active_result)
+    if gtfs_field.type == "Color":
+        return ColorReviewField(gtfs_field, active_result)
+    if gtfs_field.type in ['Latitude', 'Longitude']:
+        return LocationPointField(gtfs_field, active_result)
     else:
         raise NotImplementedError
 
 
 class TextReviewField(ReviewField):
 
-    def __init__(self, gtfs_field):
+    def __init__(self, gtfs_field, active_result):
+        if gtfs_field.type != 'Text':
+            raise ValueError('GTFS Field is not of type text.')
         self.gtfs_field = gtfs_field
+        self.field_value = self.get_field_value(active_result.reviewed_data)
 
     def get_field_template(self) -> Union[None, str]:
         return 'review_field/text.html'
 
-    def get_template_context(self, active_result) -> Union[None, dict]:
-        field_value = active_result.reviewed_data
-        return {'field_value': field_value}
+    def get_template_context(self) -> Union[None, dict]:
+        return {'field_value': self.field_value}
+
+
+class ColorReviewField(ReviewField):
+
+    def __init__(self, gtfs_field, active_result):
+        if gtfs_field.type != 'Color':
+            raise ValueError('GTFS Field is not of type color.')
+        self.gtfs_field = gtfs_field
+        self.active_result = active_result
+        self.field_value = self.get_field_value(self.active_result.reviewed_data)
+        self.field_color = self._get_color(self.field_value)
+
+    def get_field_template(self) -> Union[None, str]:
+        return 'review_field/color.html'
+
+    def get_template_context(self) -> Union[None, dict]:
+        return {'field_value': self.field_value,
+                'field_color': self.field_color}
+
+    def _get_color(self, value) -> str:
+        if value == '[blank]':
+            if self.gtfs_field.name == 'route_color':
+                return "#FFFFFF"
+            if self.gtfs_field.name == 'route_text_color':
+                return "#000000"
+        if value[0] not in ['#']:
+            return '#' + value
+        else:
+            return value
+
+
+class LocationPointField(ReviewField):
+    def __init__(self, gtfs_field, active_result):
+        self.gtfs_field = gtfs_field
+        self.active_result = active_result
+
+        related_fields = related_field.objects.filter(result=active_result)
+        if self.gtfs_field.type == "Latitude":
+            self.latitude = active_result.reviewed_data
+            for i in related_fields:
+                if i.gtfs_field.type == "Longitude":
+                    self.longitude = i.gtfs_field_value
+        else:
+            self.longitude = active_result.reviewed_data
+            for i in related_fields:
+                if i.gtfs_field.type == "Latitude":
+                    self.latitude = i.gtfs_field_value
+
+    def get_field_template(self) -> Union[None, str]:
+        return 'review_field/location_point_field.html'
+
+    def get_template_context(self) -> Union[None, dict]:
+        GOOGLE_API_KEY = settings.GOOGLE_API_KEY
+        latitude = self.latitude
+        longitude = self.longitude
+
+        return {'GOOGLE_API_KEY': GOOGLE_API_KEY,
+                'lat': latitude,
+                'lng': longitude}
 
 
 # endregion
@@ -214,7 +290,7 @@ def consistency_widget_factory(consistency_widget):
 
 class DefaultConsistencyWidget(ConsistencyWidget):
 
-    def get_template_context(self, active_result) -> Union[None, dict]:
+    def get_template_context(self) -> Union[None, dict]:
         return None
 
     def get_template(self) -> None:
@@ -237,26 +313,36 @@ class ResultsCaptureWidget(Widget):
     def model_instance(self):
         return self.my_results_capture_widget
 
+    @abstractmethod
+    def get_form(self):
+        pass
 
-def results_capture_widget_factory(results_capture_widget):
+def results_capture_widget_factory(results_capture_widget, active_result):
     """This factory produces the appropriate ReviewWidget based on the configuration data provided
 
         Args:
             results_capture_widget: an instance of the results_capture_widget model
     """
 
-    return DefaultResultsCaptureWidget(results_capture_widget)
+    return DefaultResultsCaptureWidget(results_capture_widget, active_result)
 
 
 class DefaultResultsCaptureWidget(ResultsCaptureWidget):
 
+    def __init__(self, results_capture_widget, active_result):
+        self.results_capture_widget = results_capture_widget
+        self.active_result = active_result
+
     def get_template(self) -> str:
         return "result_capture_widgets/default_result_capture_widget.html"
 
-    def get_template_context(self, active_result) -> Union[None, dict]:
-        scores = score.objects.filter(results_capture_widget=self.my_results_capture_widget).order_by('score')
+    def get_template_context(self) -> Union[None, dict]:
+        scores = score.objects.filter(results_capture_widget=self.results_capture_widget).order_by('score')
         return {'scores': scores}
 
+    def get_form(self, *args, **kwargs):
+        from gtfs_grading_app.forms import ResultForm
+        return ResultForm(results_capture_widget=self.results_capture_widget, *args, **kwargs)
 
 
 # endregion
@@ -310,18 +396,35 @@ class DataSelector(ABC):
             random_sample = ptg_target_table.sample(n=number_to_sample)
 
             for index, row in random_sample.iterrows():
+                try:
+                    reviewed_data = row[target_field_name]
+                except KeyError:
+                    reviewed_data = "[blank]"
+
                 this_result = result.objects.create(review=my_review,
                                                     review_category=category,
-                                                    reviewed_data=row[target_field_name])
+                                                    reviewed_data=reviewed_data)
                 if has_related_field_same_table:
                     related_fields = category.review_widget.related_field_same_table.all()
                     for field in related_fields:
+                        try:
+                            gtfs_field_value = row[field.name]
+                        except KeyError:
+                            gtfs_field_value = "[blank]"
                         my_field = related_field.objects.create(gtfs_field=field,
                                                                 result=this_result,
-                                                                gtfs_field_value=row[field.name])
+                                                                gtfs_field_value=gtfs_field_value)
 
                 if has_related_field_other_table:
-                    raise NotImplementedError
+                    RelatedFieldsSelector = related_fields_selector_factory(category.review_widget)
+                    field_list = RelatedFieldsSelector.get_related_fields_from_gtfs(row, gtfs_feed)
+                    for field in field_list:
+                        gf, created = gtfs_field.objects.get_or_create(name=field[0],
+                                                                       table=field[1],
+                                                                       type=get_field_type(field[0], field[1]))
+                        my_field = related_field.objects.create(gtfs_field=gf,
+                                                                result=this_result,
+                                                                gtfs_field_value=str(field[2]))
 
         return new_session_gtfs_path, my_review
 
@@ -372,4 +475,37 @@ class NumberDataSelector(DataSelector):
             return x
         else:
             return total_row
+
+
+class RelatedFieldSelector(ABC):
+
+    @abstractmethod
+    def get_related_fields_from_gtfs(self, gtfs_table_row, gtfs_feed) -> list:
+        raise NotImplementedError
+
+
+def related_fields_selector_factory(review_widget):
+    if review_widget.related_field_other_table == "trip_headsign":
+        return TripHeadsignRelatedFieldSelector()
+    else:
+        return NotImplementedError
+
+
+class TripHeadsignRelatedFieldSelector(RelatedFieldSelector):
+
+    def get_related_fields_from_gtfs(self, gtfs_table_row, gtfs_feed) -> list:
+        """function takes a gtfs table row and a gtfs feed and returns the a list containing the file, field name, and
+        value of the related field"""
+
+        route_id = gtfs_table_row['route_id']
+        routes = gtfs_feed.routes
+        route_row = routes[routes.route_id.eq(route_id)]
+        return [
+            ['route_short_name', 'routes.txt', route_row.iloc[0]['route_short_name']],
+            ['route_long_name', 'routes.txt', route_row.iloc[0]['route_long_name']],
+            ['route_desc', 'routes.txt', route_row.iloc[0]['route_desc']]
+        ]
+
+
+
 # endregion

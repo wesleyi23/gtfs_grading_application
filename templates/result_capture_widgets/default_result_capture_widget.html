@@ -1,19 +1,24 @@
+{% load custom_tags %}
+
 <div class="row">
     {% for score in scores %}
+{#        Duplicate code in review_evaluation_results.html. Time was running out and the bats were closing in.  Please forgive me.#}
         <div class="col">
-            <div class="card">
-                <div class="card-body">
-                    <span class="score-number">{{ score.score }}</span>
-                    <span class="score-help-text">{{ score.help_text }}</span>
+            <div class="card score-card {% if score.id == form.score_id.value %} selected-score-card {% endif %}" id="scoreCard-{{ score.id }}" data-scoreId="{{ score.id }}">
+                <div class="card-body score-card-body">
+                    <div class="score-number">{{ score.score | score_display_round }}</div>
+                    <div class="score-help-text">{{ score.help_text }}</div>
                 </div>
             </div>
         </div>
     {% endfor %}
-    <form action="{% url 'evaluate_feed' active_review.id active_review_category.id active_result_number %}" method="post">
+    <form action="{% url 'evaluate_feed' active_review.id active_review_category.id active_result_number %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit" class="btn" name='submit_score'>Save and Continue</button>
     </form>
-
-
 </div>
+
+
+
+

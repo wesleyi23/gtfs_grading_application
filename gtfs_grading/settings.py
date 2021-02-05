@@ -142,3 +142,7 @@ MESSAGE_TAGS = {
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+try:
+    GOOGLE_API_KEY = os.environ['GOOGLE_API_KEY']
+except KeyError:
+    GOOGLE_API_KEY = "Manage.pyIsDumb&cantFindOSVariables"

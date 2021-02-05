@@ -1,0 +1,65 @@
+{% extends "home.html" %}
+{% load static %}
+{% load custom_tags %}
+
+{% block head_content %}
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+    <div class="col-6">
+        <div class="card">
+            <div class="card-body">
+                <div class="review-heading">
+                    <p>Agency: {{ active_review.agency }}</p>
+                    <p>Vehicle Type: {{ active_review.mode }}</p>
+                    <p>Date: {{ active_review.created_date }}</p>
+                </div>
+                <hr>
+                <div class="review-results">
+                    <table class="table table-hover">
+                        <tbody>
+                        {% for result in results %}
+                            <tr onclick="window.location='{% url 'view_completed_review' active_review.id result.id %}';">
+                                <td>{{ result.review_category.gtfs_field.field_name_to_label }}</td>
+                                <td>{{ result.reviewed_data }}</td>
+                                <td>{{ result.score.score | score_display_round}}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6">
+        {% if active_result %}
+            <div class="row">
+                {% include review_widget_template %}
+            </div>
+            <div class="row">
+
+            <div class="col-9">                        {# Duplicate code in review_evaluation_results.html. Time was running out and the bats were closing in.  Please forgive me.#}
+                <div class="card score-card ">
+                    <div class="card-body score-card-body">
+                        <div class="score-number">{{ active_result.score.score | score_display_round }}</div>
+                        <div class="score-help-text">{{ active_result.score.help_text }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <span class="score-explanation"><p>{{ active_result.score_reason }}</p></span>
+            </div>
+            <div class="row">
+                {% if image %}
+                    <div class="screenshoot-container" ><img class="img-fluid" src="{{ image.url }}" alt="screenshot used for scoring"/></div>
+                {% endif %}
+            </div>
+        {% endif %}
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block end_js %}
+{% endblock %}

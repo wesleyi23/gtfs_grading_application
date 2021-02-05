@@ -1,0 +1,46 @@
+{% extends "home.html" %}
+{% include template_tags %}
+{% load static %}
+
+{% block head_content %}
+{% endblock %}
+
+{% block content %}
+    <div class="container w-100">
+        <h1>Search completed reviews</h1>
+        <div class="row">
+            <div class="card">
+                <b>Select a transit operator</b>
+                <p>Begin by typing a transit operator name</p>
+                <br>
+                <p>Completed reviews:</p>
+                <table class="table table-hover">
+                    <thead>
+                    <th>Transit Agency</th>
+                    <th>Score</th>
+                    <th>Date</th>
+                    <th>Route type</th>
+                    <th>Reviewer</th>
+                    </thead>
+                    <tbody>
+                    {% for review in completed_reviews %}
+                        <tr onclick="window.location='{% url 'view_completed_review' review.id %}'">
+                            <td>{{ review.agency }}</td>
+                            <td>{{ review.final_score }}</td>
+                            <td>{{ review.completed_date }}</td>
+                            <td>{{ review.mode }}</td>
+                            <td></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block end_js %}
+{% endblock %}

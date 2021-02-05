@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'home.html' %}
 {% load static %}
 {% load custom_tags %}
 
@@ -6,29 +6,30 @@
     <link rel="stylesheet" href="{% static 'css/file_upload_styles.css' %}">
 {% endblock %}
 
-{% block page_content %}
-
-
-    <h1>Upload a GTFS feed</h1>
+{% block content %}
+    <h1>Evaluate a new feed</h1>
     {% include 'messages.html' %}
-    <form action="/post_gtfs_zip/" method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="form-group inputDnD">
-            {#                            <label class="sr-only" for="id_file">File Upload</label>#}
-            <input type="file" name="file" class="form-control-file text-primary font-weight-bold" id="id_file" accept=".zip" onchange="readUrl(this)" data-title="Drag and drop a file" required>
-        </div>
-        <input type="submit" class="btn btn-primary btn-block" value="Upload GTFS"></input>
-    </form>
+    <div class="card">
+        <div class="card-body">
+            <b>Select a feed</b>
+            <p>Upload a local file</p>
+            <form action="/post_gtfs_zip/" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="file" name="file" class="form-control-file text-primary font-weight-bold" id="id_file" accept=".zip" onchange="readUrl(this)" required>
+                <input type="submit" class="btn btn-primary btn-block" value="Upload GTFS">
+            </form>
 
-    <ul>
-    {% if my_new_review_form %}
-        <form action="{% url 'start_new_evaluation' %}" method="post">
-            {% csrf_token %}
-            {{ my_new_review_form.as_p }}
-            <input type="submit" value="Start review">
-        <input>
-        </form>
-    {% endif %}
+            <ul>
+                {% if my_new_review_form %}
+                    <form action="{% url 'start_new_evaluation' %}" method="post">
+                        {% csrf_token %}
+                        {{ my_new_review_form.as_p }}
+                        <input type="submit" value="Start review">
+                    </form>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
 
 {% endblock %}
 

@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+
+{% block head_content %}
+    <link rel="stylesheet" href="{% static 'css/file_upload_styles.css' %}">
+{% endblock %}
+
+{% block page_content %}
+    {% if previous_review_path %}
+        <a href="{{ previous_review_path }}">Previous</a>
+    {% endif %}
+    {% if next_review_path %}
+        <a href="{{ next_review_path }}">Next</a>
+    {% endif %}
+    <div class="container-fluid w-100 h-100" >
+
+        <div class="row">
+            <div id="review-area" class="col-9" style="height: 100%">
+                {% include 'messages.html' %}
+                <h1>Review</h1>
+                <b>Confrim your choices</b>
+                <p>Click any element to review your score.</p>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="review-heading">
+                                    <p>Agency: {{ active_review.agency }}</p>
+                                    <p>Vehicle Type: {{ active_review.mode }}</p>
+                                    <p>Date: {{ active_review.created_date }}</p>
+                                </div>
+                                <hr>
+                                <div class="review-results">
+                                    <table class="table table-hover">
+                                        <tbody>
+                                        {% for result in results %}
+                                            <tr onclick="window.location='{% url 'review_evaluation_results' active_review.id result.id %}';">
+                                                <td>{{ result.review_category.gtfs_field.field_name_to_label }}</td>
+                                                <td>{{ result.reviewed_data }}</td>
+                                                <td>{{ result.score.score | score_display_round}}</td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    <a class="btn btn-secondary" href="{% url 'mark_review_complete' active_review.id %}">Complete ></a>
+                    </div>
+                    <div class="col-6">
+                        {% if active_result %}
+                            <div class="row">
+                                {% include review_widget_template %}
+                            </div>
+                            <div class="row">
+                                <div class="col-3">Your score:</div>
+                                <div class="col-9">
+                                    {# Duplicate code in review_evaluation_results.html. Time was running out and the bats were closing in.  Please forgive me.#}
+                                    <div class="card score-card ">
+                                        <div class="card-body score-card-body">
+                                            <div class="score-number">{{ active_result.score.score | score_display_round }}</div>
+                                            <div class="score-help-text">{{ active_result.score.help_text }}</div>
+                                        </div>
+                                    </div></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-3">Your explanation:</div>
+                                <div class="col-9"><span class="score-explanation"><p>{{ active_result.score_reason }}</p></span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-3">Your screenshot:</div>
+                                <div class="col-9">
+                                    {% if image %}
+                                        <div class="screenshoot-container" ><img class="img-fluid" src="{{ image.url }}" alt="screenshot used for scoring"/></div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="d-flex align-items-start flex-column col-3" style="height: 100vh; min-width: 250px; position: fixed; top:0px;right: 0px">
+                <div class="p-2 bd-highlight" style="height: 275px; width: 100%">
+                    <h2 class="agency-name">{{ active_review.agency }}</h2>
+                    <div class="gtfs-progress-bar">
+                        40% complete
+                        <div class="progress" style="height:20px">
+                            <div class="progress-bar" style="width:40%;height:20px"></div>
+                        </div>
+                    </div>
+                    <hr style="margin-top: 2.5rem">
+                </div>
+
+                {# Future Ian (or whoever else sees this code) sorry there is duplicate code in evaluate_feed.html.  Time is running out and the bats are closing in. #}
+                <div class="p-2 mb-auto mt-auto progress-table-container" style="width: 100%">
+                    <div class="progress-table">
+                        {% for cat in review_categories %}
+                            {% if cat.id == active_review_category.id %}
+                                <div class="progress-table-row">
+                                    <div class="progress-table-number number-circle">{{ forloop.counter }}</div>
+                                    <div class="progress-table-name">{{ cat.gtfs_field.name | field_name_to_label }}</div>
+                                </div>
+                            {% else %}
+                                <div class="progress-table-row">
+                                    <div class="progress-table-number">{{ forloop.counter }}</div>
+                                    <div class="progress-table-name">{{ cat.gtfs_field.name | field_name_to_label }}</div>
+                                </div>
+                            {% endif %}
+                            {% if forloop.last %}
+                                <div class="progress-table-row">
+                                    <div class="progress-table-number number-circle">{{ forloop.counter | plus1 }}</div>
+                                    <div class="progress-table-name">Review</div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                <div id="evaluation_logo" class="p-2" style="height:200px; width:100%">
+                    <hr>
+                    <img src="{% static 'sequia_with_text.svg' %}" class="mx-auto d-block" style="margin-bottom: 5rem">
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block end_js %}
+    <script>
+        $(document).ready(function() {
+            $('.datepicker').datepicker()
+        });
+    </script>
+    <script>
+        const scoreCards = document.getElementsByClassName("score-card");
+        const scoreIdFormField = document.getElementById('id_score_id');
+
+        function onScoreClick() {
+            if(this.classList.contains('selected-score-card')){
+                this.classList.remove('selected-score-card');
+                scoreIdFormField.value = null;
+                return
+            }
+            let scoreId = this.getAttribute('data-scoreId');
+            scoreIdFormField.value = scoreId;
+            for (let i = 0; i < scoreCards.length; i++) {
+                scoreCards[i].classList.remove("selected-score-card");
+            }
+            this.classList.add("selected-score-card");
+        }
+        for (let i = 0; i < scoreCards.length; i++) {
+            scoreCards[i].addEventListener('click', onScoreClick, false);
+        }
+    </script>
+
+{% endblock %}

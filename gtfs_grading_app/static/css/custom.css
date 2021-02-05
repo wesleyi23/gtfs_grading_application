@@ -13,7 +13,7 @@
   --white: #fff;
   --gray: #eeeeee;
   --gray-dark: #C4C4C4;
-  --primary: #007bff;
+  --primary: #18A0FB;
   --secondary: #6c757d;
   --success: #28a745;
   --info: #17a2b8;
@@ -176,19 +176,21 @@ a:hover {
 }
 
 input[type=submit]{
-  background: #18A0FB;
-  border-radius: 90px;
+  background: #18A0FB !important;
+  border-radius: 90px !important;
   font-family: Lato;
   font-style: normal;
   font-weight: bold;
   font-size: .9rem;
   line-height: 2rem;
   border-width: 0px;
+  outline:none;
   /* identical to box height */
 
   text-align: center;
   color: #FFFFFF;
 }
+
 
 .score-table thead th{
   font-style: italic;
@@ -228,8 +230,8 @@ input[type=submit]{
 
 #review-area{
   box-shadow: 4px 0px 4px rgba(0, 0, 0, 0.25);
-  padding: 2rem 2rem 2rem 4rem;
-  background: var(--gray);
+  padding: 0rem 2rem 2rem 4rem;
+  background: var(--white);
 }
 
 .agency-name{
@@ -324,4 +326,77 @@ input[type=submit]{
   margin:auto;
   line-height: calc(1.2rem + 1.5vh - 6px);
   text-align:center
+}
+
+.review-card{
+  margin-top: 0rem;
+  margin-bottom: 1rem;
+  padding: .75rem;
+  border-radius: 2.5rem;
+}
+
+.review-card-body{
+  padding: .75rem !important;
+}
+
+.review-card p{
+  margin-bottom: 0rem;
+}
+
+.review-text-field {
+  font-weight: bold;
+  margin-left: 2rem;
+  margin-right: 2rem;
+}
+
+.score-card{
+  padding: .75rem;
+  border-radius: 2.5rem;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+  -webkit-transition-duration: 0.3s;
+  transition-duration: 0.3s;
+  -webkit-transition-property: box-shadow, transform;
+  transition-property: box-shadow, transform;
+}
+
+.score-card:hover{
+
+  cursor: pointer;
+  box-shadow: 0 10px 10px -10px rgba(0, 0, 0, 0.6);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.selected-score-card{
+  background: var(--primary);
+}
+
+
+.score-number{
+  font-size: 2.5rem;
+  text-align: center;
+}
+
+.score-text{
+
+}
+
+.score-card-body{
+  padding: .5rem;
+}
+
+.custom-select-sm {
+  display: inline;
+  max-width: 100px!important;
+}
+
+.score-id-form-field {
+  display: none;
+}
+
+label:empty { display: none; }
+
+.img-fluid {
+  max-width: 100%;
+  height: auto
 }

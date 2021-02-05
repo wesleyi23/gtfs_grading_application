@@ -1,0 +1,57 @@
+<script defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_API_KEY }}&callback=initMap"></script>
+
+<style>
+    #map {
+        height: 100%;
+    }
+</style>
+
+<div style="height: 400px; width: 400px">
+
+    <div id="map"></div>
+
+</div>
+
+<script>
+    console.log('run');
+
+    function initMap() {
+        const map = new google.maps.Map(document.getElementById("map"), {
+            center: { lat: {{ lat }}, lng: {{ lng }} },
+            zoom: 19,
+            mapTypeId: 'satellite',
+            disableDefaultUI: false,
+        });
+        const Circle15 = new google.maps.Circle({
+            strokeColor: "#FF0000",
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            {#fillColor: "#FF0000",#}
+            fillOpacity: 0.0,
+            map,
+            center: { lat: {{ lat }}, lng: {{ lng }} },
+            radius: 15,
+        });
+        const Circle10 = new google.maps.Circle({
+            strokeColor: "#FFFF00",
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            {#fillColor: "#FF0000",#}
+            fillOpacity: 0.0,
+            map,
+            center: { lat: {{ lat }}, lng: {{ lng }} },
+            radius: 10,
+        });
+        const Cirle5 = new google.maps.Circle({
+            strokeColor: "#008000",
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            {#fillColor: "#FF0000",#}
+            fillOpacity: 0.0,
+            map,
+            center: { lat: {{ lat }}, lng: {{ lng }} },
+            radius: 5,
+        });
+
+    }
+</script>

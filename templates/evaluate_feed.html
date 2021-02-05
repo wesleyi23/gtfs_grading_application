@@ -15,7 +15,7 @@
     {% endif %}
     <div class="container-fluid w-100 h-100" >
         <div class="row">
-            <div id="review-area" class="col" style="height: 100vh">
+            <div id="review-area" class="col-9" style="height: 100%">
                 <h1>{{ active_review_category.gtfs_field.field_name_to_label }} ({{ active_result_number }}/{{ max_items }})</h1>
                 <p><b>Evaluate This Element</b></p>
                 <p>Find this element in another resource published by the agency, such as their website or printed schedule.</p>
@@ -28,8 +28,8 @@
                 {% include result_capture_template %}
             </div>
 
-            <div class="d-flex align-items-start flex-column col-3" style="height: 100vh; min-width: 250px">
-                <div class="p-2 bd-highlight" style="height: 275px">
+            <div class="d-flex align-items-start flex-column col-3" style="height: 100vh; min-width: 250px; position: fixed; top:0px;right: 0px">
+                <div class="p-2 bd-highlight" style="height: 275px; width: 100%">
                     <h2 class="agency-name">{{ active_review.agency }}</h2>
                     <div class="gtfs-progress-bar">
                         40% complete
@@ -40,7 +40,7 @@
                     <hr style="margin-top: 2.5rem">
                 </div>
 
-                <div class="p-2 mb-auto mt-auto progress-table-container">
+                <div class="p-2 mb-auto mt-auto progress-table-container" style="width: 100%">
                     <div class="progress-table">
                         {% for cat in review_categories %}
                             {% if cat.id == active_review_category.id %}
@@ -54,8 +54,13 @@
                                     <div class="progress-table-name">{{ cat.gtfs_field.name | field_name_to_label }}</div>
                                 </div>
                             {% endif %}
+                            {% if forloop.last %}
+                                <div class="progress-table-row">
+                                    <div class="progress-table-number">{{ forloop.counter | plus1 }}</div>
+                                    <div class="progress-table-name">Review</div>
+                                </div>
+                            {% endif %}
                         {% endfor %}
-
                     </div>
                 </div>
                 <div id="evaluation_logo" class="p-2" style="height:200px; width:100%">
@@ -72,5 +77,31 @@
 {% endblock %}
 
 {% block end_js %}
+    <script>
+        $(document).ready(function() {
+            $('.datepicker').datepicker()
+        });
+    </script>
+    <script>
+        const scoreCards = document.getElementsByClassName("score-card");
+        const scoreIdFormField = document.getElementById('id_score_id');
+
+        function onScoreClick() {
+            if(this.classList.contains('selected-score-card')){
+                this.classList.remove('selected-score-card');
+                scoreIdFormField.value = null;
+                return
+            }
+            let scoreId = this.getAttribute('data-scoreId');
+            scoreIdFormField.value = scoreId;
+            for (let i = 0; i < scoreCards.length; i++) {
+                scoreCards[i].classList.remove("selected-score-card");
+            }
+            this.classList.add("selected-score-card");
+        }
+        for (let i = 0; i < scoreCards.length; i++) {
+            scoreCards[i].addEventListener('click', onScoreClick, false);
+        }
+    </script>
 
 {% endblock %}

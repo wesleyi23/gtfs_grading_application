@@ -1,5 +1,7 @@
 from django.urls import reverse
 
+from gtfs_grading_app.models import result
+
 
 def list_to_tuple_of_tuples(list):
     output = ((list[0], list[0]), )
@@ -44,6 +46,7 @@ def get_previous_review_item(active_result_number, max_items, active_review, act
         item_found = False
         for cat in review_categories.order_by('-id'):
             if item_found:
+                max_items = result.objects.filter(review_id=active_review.id, review_category_id=cat.id).count()
                 return reverse('evaluate_feed',
                                kwargs={
                                    'review_id': active_review.id,
@@ -55,7 +58,11 @@ def get_previous_review_item(active_result_number, max_items, active_review, act
         return None
 
 
-
+def get_or_none(class_model, **kwargs):
+    try:
+        return class_model.objects.get(**kwargs)
+    except class_model.DoesNotExist:
+        return None
 
 
 

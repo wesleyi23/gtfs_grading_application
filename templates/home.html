@@ -15,8 +15,8 @@
     <!-- Sidebar -->
     <nav id="sidebar">
         <div style="padding-top: 7rem;" class="h-100 w-100">
-            <a class="nav-link {% if active_page == 'evaluate' %}active{% endif %}" href="{% url 'evaluate_feed' %}">Evaluate a New Feed</a>
-            <a class="nav-link {% if active_page == 'search' %}active{% endif %}" href="#">Search Completed Reviews</a>
+            <a class="nav-link {% if active_page == 'evaluate' %}active{% endif %}" href="{% url 'start_new_evaluation' %}">Evaluate a New Feed</a>
+            <a class="nav-link {% if active_page == 'search' %}active{% endif %}" href="{% url 'search_competed_review' %}">Search Completed Reviews</a>
             <a class="nav-link {% if active_page == 'about' %}active{% endif %}" href="{% url 'about' %}">About Sequoia</a>
             <a class="nav-link {% if active_page == 'admin' %}active{% endif %}" href="{% url 'administration' %}">Administration</a>
         </div>

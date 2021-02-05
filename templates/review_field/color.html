@@ -1,0 +1,9 @@
+<div style="text-align: center">
+    <div style="width: 175px; height: 75px; background: {{ field_color }}">
+
+    </div>
+    <b>{{ field_value }}</b>
+    {% if field_value == '[blank]' %}
+        <p><i>(Application default color shown: {{ field_color }})</i></p>
+    {% endif %}
+</div>
