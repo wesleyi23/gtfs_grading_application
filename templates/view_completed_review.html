@@ -8,7 +8,7 @@
 {% block content %}
     <div class="row">
     <div class="col-6">
-        <div class="card">
+        <div class="card" style="z-index: 55">
             <div class="card-body">
                 <div class="review-heading">
                     <p>Agency: {{ active_review.agency }}</p>
@@ -34,14 +34,20 @@
     </div>
     <div class="col-6">
         {% if active_result %}
-            <div class="row">
-                {% include review_widget_template %}
+            <div class="row pt-5">
+                <div class="position-relative">
+                    <div class="position-absolute top-50 start-50 translate-middle" style="background: var(--green); height: 50px; width: 200%"></div>
+                    <div style="margin-left: 1rem;">
+                        {% include review_widget_template %}
+                    </div>
+                </div>
             </div>
+
             <div class="row">
 
             <div class="col-9">                        {# Duplicate code in review_evaluation_results.html. Time was running out and the bats were closing in.  Please forgive me.#}
                 <div class="card score-card ">
-                    <div class="card-body score-card-body">
+                    <div class="card-body score-card-body ml-1 mt-4">
                         <div class="score-number">{{ active_result.score.score | score_display_round }}</div>
                         <div class="score-help-text">{{ active_result.score.help_text }}</div>
                     </div>

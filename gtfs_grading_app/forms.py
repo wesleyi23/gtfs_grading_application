@@ -170,11 +170,11 @@ class NewReviewForm(forms.Form):
         self.fields['agency'] = forms.ChoiceField(choices=agency_options_choices,
                                                   label='Agency',
                                                   widget=forms.Select(
-                                                      attrs={}))
+                                                      attrs={'class': 'form-select form-select-sm'}))
         self.fields['mode'] = forms.ChoiceField(choices=mode_options_choices,
                                                 label='Mode',
                                                 widget=forms.Select(
-                                                    attrs={}))
+                                                    attrs={'class': 'form-select form-select-sm'}))
 
 
 class ResultForm(forms.Form):

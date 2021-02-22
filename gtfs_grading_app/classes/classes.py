@@ -38,10 +38,13 @@ from typing import final, Type, Union, List, Any, Dict
 # from gtfs_grading_app.forms import AddConsistencyWidgetVisualExample, AddConsistencyWidgetLink, \
 #     AddConsistencyWidgetOtherText, AddReviewWidgetRelatedFieldSameTable, AddResultCaptureScore, AddReviewWidget, \
 #     AddConsistencyWidget, AddResultsCaptureWidget
+from django.contrib import messages
 from django.db import transaction
+from django.http import Http404
+from django.shortcuts import get_object_or_404
 
 from gtfs_grading import settings
-from gtfs_grading_app.gtfs_spec.import_gtfs_spec import get_field_type
+from gtfs_grading_app.gtfs_spec.import_gtfs_spec import get_field_type, get_table_primary_key
 from gtfs_grading_app.models import review_category, consistency_widget_visual_example, consistency_widget_link, score, \
     review, result, related_field, gtfs_field
 import partridge as ptg # type: ignore
@@ -395,15 +398,23 @@ class DataSelector(ABC):
             number_to_sample = ds.select_row_sample_count(total_table_rows)
             random_sample = ptg_target_table.sample(n=number_to_sample)
 
+            reviewed_data_pk_name = get_table_primary_key(target_table)
+
             for index, row in random_sample.iterrows():
                 try:
                     reviewed_data = row[target_field_name]
                 except KeyError:
                     reviewed_data = "[blank]"
+                try:
+                    reviewed_data_pk_value = row[reviewed_data_pk_name]
+                except KeyError:
+                    reviewed_data_pk_value = None
 
                 this_result = result.objects.create(review=my_review,
                                                     review_category=category,
-                                                    reviewed_data=reviewed_data)
+                                                    reviewed_data=reviewed_data,
+                                                    reviewed_data_pk_name=reviewed_data_pk_name,
+                                                    reviewed_data_pk_value=reviewed_data_pk_value)
                 if has_related_field_same_table:
                     related_fields = category.review_widget.related_field_same_table.all()
                     for field in related_fields:
@@ -428,9 +439,49 @@ class DataSelector(ABC):
 
         return new_session_gtfs_path, my_review
 
-    def select_new_data_for_review(self, gtfs_feed, current_result_id):
+    @staticmethod
+    def select_new_item_for_review(self, gtfs_feed, current_result_id):
         '''This method will replace the specified current result with a new one from the gtfs_feed'''
-        raise NotImplementedError
+
+        target_result = get_object_or_404(result, id=current_result_id)
+        gtfs_feed = ptg.load_feed(gtfs_feed)
+
+        # check that gtfs_feed matches result
+
+    @staticmethod
+    def validate_skip_result(self, request, current_result_id):
+        '''This method validates that you may replace a result in the review.  It returns True or False and a request
+        with an error or success message.'''
+        target_result = get_object_or_404(result, id=current_result_id)
+        gtfs_feed = ptg.load_feed(request.session['gtfs_feed'])
+        if not self.__gtfs_feed_matches_result(gtfs_feed, target_result):
+            messages.error(request, 'Your active GTFS feed does not appear to match the review you are working on. You may no longer skip an item')
+            return False, request
+        if not self.__check_all_gtfs_rows_are_not_selected(gtfs_feed, target_result):
+            messages.warning(request, "You can not skip any items in this category, all items in the feed have been selected for review.")
+            return False, request
+        return True, request
+
+
+    @staticmethod
+    def __gtfs_feed_matches_result(self, gtfs_feed, current_result):
+        current_review_agency = current_result.review.agency
+        feed_agency_list = gtfs_feed.agency['agency_name'].tolist()
+        return current_review_agency in feed_agency_list
+
+    @staticmethod
+    def __check_all_gtfs_rows_are_not_selected(self, gtfs_feed, current_result):
+        # get data_selector
+        data_selector = data_selector_factory(current_result.review_category.data_selector)
+
+        # find total rows in GTFS table
+        target_table = current_result.review_category.gtfs_field.table
+        ptg_target_table = getattr(gtfs_feed, target_table.replace('.txt', ''))
+        total_table_rows = ptg_target_table.shape[0]
+
+        sample_size = data_selector.select_row_sample_count(total_table_rows)
+
+        return sample_size != total_table_rows
 
 
 def data_selector_factory(data_selector):

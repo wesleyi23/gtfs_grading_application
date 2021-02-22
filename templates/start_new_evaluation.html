@@ -9,25 +9,56 @@
 {% block content %}
     <h1>Evaluate a new feed</h1>
     {% include 'messages.html' %}
-    <div class="card">
-        <div class="card-body">
-            <b>Select a feed</b>
-            <p>Upload a local file</p>
-            <form action="/post_gtfs_zip/" method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                <input type="file" name="file" class="form-control-file text-primary font-weight-bold" id="id_file" accept=".zip" onchange="readUrl(this)" required>
-                <input type="submit" class="btn btn-primary btn-block" value="Upload GTFS">
-            </form>
-
-            <ul>
-                {% if my_new_review_form %}
-                    <form action="{% url 'start_new_evaluation' %}" method="post">
+    <div class="row">
+        <div class="col-md-12 col-lg-9 col-xl-8">
+            <div class="card evaluate-new-feed-card">
+                <div class="card-body">
+                    <b>Select a feed</b>
+                    <p>Upload a local file</p>
+                    <form action="/post_gtfs_zip/" method="post" enctype="multipart/form-data" id="gtfs_file_form">
                         {% csrf_token %}
-                        {{ my_new_review_form.as_p }}
-                        <input type="submit" value="Start review">
+                        <input type="file" name="file" class="form-control-file text-primary font-weight-bold" id="id_file" accept=".zip" onchange="readUrl(this)" required>
+                        <input type="submit" value="Upload GTFS >"  class="btn btn-sm btn-primary" id="gtfs_file_form_btn">
                     </form>
-                {% endif %}
-            </ul>
+                    <hr>
+                    <p>What portions of this feed would you like to review?</p>
+                    <ul class="feed-portion-form">
+                        {% if my_new_review_form %}
+                            <form action="{% url 'start_new_evaluation' %}" method="post">
+                            {% csrf_token %}
+                            {{ my_new_review_form.as_p }}
+
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            <div class="row">
+                <div class="mt-3">
+                    <input type="submit" value="Start review >" class="btn btn-sm btn-primary" style="float: right">
+                </div>
+            </div>
+
+            </form>
+        </div>
+
+    </div>
+
+    <!-- Active File Modal -->
+    <div class="modal fade" id="active_file_modal" tabindex="-1" role="dialog" aria-labelledby="ActiveFileModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ActiveFileModalLabel">You have an active GTFS feed</h5>
+                </div>
+                <div class="modal-body">
+                    You may only have one active GTFS feed at a time.  If you have any reviews in progress you may not
+                    be able to complete them. Are you sure you want to upload a new GTFS feed?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="HideModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="SubmitNewFile()">Yes</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -36,7 +67,6 @@
 {% block end_js %}
     <script>
         function readUrl(input) {
-
             if (input.files && input.files[0]) {
                 let reader = new FileReader();
                 reader.onload = (e) => {
@@ -47,7 +77,32 @@
                 }
                 reader.readAsDataURL(input.files[0]);
             }
-
         }
     </script>
+    <script>
+        {# Show modal instead of submit #}
+        $( document ).ready(function() {
+            $('#active_file_modal').modal({
+                keyboard: true
+            });
+            {% if my_new_review_form %}
+            $('#gtfs_file_form').on('submit', function (e) {
+                console.log('test')
+                e.preventDefault();
+                $('#active_file_modal').modal('toggle')
+            });
+            {% endif %}
+        });
+
+        function SubmitNewFile(){
+            $('#gtfs_file_form')[0].submit()
+            console.log("submit")
+        };
+
+        function HideModal(){
+            $('#active_file_modal').modal('toggle')
+        };
+    </script>
+
+
 {% endblock %}

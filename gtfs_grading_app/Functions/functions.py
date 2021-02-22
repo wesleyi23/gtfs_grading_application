@@ -1,6 +1,7 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 
-from gtfs_grading_app.models import result
+from gtfs_grading_app.models import result, mode_lookup_table
 
 
 def list_to_tuple_of_tuples(list):
@@ -8,6 +9,19 @@ def list_to_tuple_of_tuples(list):
     for i in range(1, len(list)):
         output = output + ((list[i], list[i]),)
     return output
+
+def get_mode_drop_down(mode_id_list) -> tuple:
+    output = ((mode_id_list[0], mode_id_to_name(mode_id_list[0])), )
+    for i in range(1, len(mode_id_list)):
+        output = output + ((mode_id_list[i], mode_id_to_name(mode_id_list[i])),)
+    return output
+
+def mode_id_to_name(mode_id):
+    try:
+        mode_name = mode_lookup_table.objects.get(mode_id=mode_id).mode_name
+    except ObjectDoesNotExist:
+        mode_name = str(mode_id) + " - Mode id not found"
+    return mode_name
 
 
 def get_next_review_item(active_result_number, max_items, active_review, active_review_category, review_categories):
@@ -63,6 +77,9 @@ def get_or_none(class_model, **kwargs):
         return class_model.objects.get(**kwargs)
     except class_model.DoesNotExist:
         return None
+
+
+
 
 
 

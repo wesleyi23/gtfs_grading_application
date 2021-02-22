@@ -450,8 +450,8 @@
             "constraints": {
               "required": "true",
               "enum": [
-                1,
-                2
+                0,
+                1
               ]
             }
           },
@@ -762,7 +762,13 @@
               "required": "true",
               "enum": [
                 0,
-                1
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
               ]
             }
           },
@@ -794,7 +800,7 @@
             "gtfs_required": "Optional",
             "gtfs_type": "Positive Integer",
             "constraints": {
-              "minimum": 0.0
+              "minimum": 1.0
             }
           },
           {
@@ -818,7 +824,7 @@
             "gtfs_required": "Optional",
             "gtfs_type": "Positive Float",
             "constraints": {
-              "minimum": 0.0
+              "minimum": 1.175494e-38
             }
           },
           {
@@ -916,7 +922,13 @@
                 0,
                 1,
                 2,
-                3
+                3,
+                4,
+                5,
+                6,
+                7,
+                11,
+                12
               ]
             }
           },
@@ -980,6 +992,18 @@
                 2,
                 3
               ]
+            }
+          }
+        ],
+        "primaryKey": "route_id",
+        "foreignKeys": [
+          {
+            "fields": [
+              "agency_id"
+            ],
+            "reference": {
+              "resource": "agency.txt",
+              "fields": "agency_id"
             }
           }
         ]
@@ -1139,7 +1163,9 @@
               "enum": [
                 0,
                 1,
-                2
+                2,
+                3,
+                4
               ]
             }
           },
@@ -1277,7 +1303,9 @@
             "constraints": {
               "enum": [
                 0,
-                1
+                1,
+                2,
+                3
               ]
             }
           },
@@ -1290,7 +1318,9 @@
             "constraints": {
               "enum": [
                 0,
-                1
+                1,
+                2,
+                3
               ]
             }
           },
@@ -1303,7 +1333,9 @@
             "constraints": {
               "enum": [
                 0,
-                1
+                1,
+                2,
+                3
               ]
             }
           },
@@ -1316,7 +1348,9 @@
             "constraints": {
               "enum": [
                 0,
-                1
+                1,
+                2,
+                3
               ]
             }
           },
@@ -1527,8 +1561,7 @@
             "constraints": {
               "enum": [
                 0,
-                1,
-                2
+                1
               ]
             }
           },

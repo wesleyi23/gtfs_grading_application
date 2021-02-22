@@ -29,14 +29,14 @@ urlpatterns = [
     path('administration/details/<int:review_id>', name='admin_details', view=views.admin_details),
     path('about/', name='about', view=views.about),
     path('post_gtfs_zip/', name='post_gtfs', view=views.post_gtfs_zip),
-    path('gtfs_admin/', name='admin', view=views.gtfs_admin),
-    path('gtfs_admin/view_review_category/', name="view_review_category", view=views.ViewReviewCategory.as_view()),
-    path('gtfs_admin/view_review_widget/<int:pk>/', views.ViewReviewWidget.as_view(), name='view_review_widget'),
-    path('gtfs_admin/add_review_category/', name="add_review_category", view=views.add_review_category),
-    path('gtfs_admin/delete_review_category/<int:review_category_id>/', name="delete_review_category", view=views.delete_review_category),
-    path('gtfs_admin/configure_widget/main_page/<str:widget_type>/<int:widget_id>/', name="configure_widget", view=views.configure_widget),
-    path('gtfs_admin/configure_widget/delete_consistency_widget_visual_example/<int:image_id>/', name="delete_consistency_widget_visual_example", view=views.delete_consistency_widget_visual_example),
-    path('gtfs_admin/configure_widget/delete_consistency_widget_link/<int:link_id>/', name="delete_consistency_widget_link", view=views.delete_consistency_widget_link),
+    # path('gtfs_admin/', name='admin', view=views.gtfs_admin),
+    # path('gtfs_admin/view_review_category/', name="view_review_category", view=views.ViewReviewCategory.as_view()),
+    # path('gtfs_admin/view_review_widget/<int:pk>/', views.ViewReviewWidget.as_view(), name='view_review_widget'),
+    # path('gtfs_admin/add_review_category/', name="add_review_category", view=views.add_review_category),
+    # path('gtfs_admin/delete_review_category/<int:review_category_id>/', name="delete_review_category", view=views.delete_review_category),
+    # path('gtfs_admin/configure_widget/main_page/<str:widget_type>/<int:widget_id>/', name="configure_widget", view=views.configure_widget),
+    # path('gtfs_admin/configure_widget/delete_consistency_widget_visual_example/<int:image_id>/', name="delete_consistency_widget_visual_example", view=views.delete_consistency_widget_visual_example),
+    # path('gtfs_admin/configure_widget/delete_consistency_widget_link/<int:link_id>/', name="delete_consistency_widget_link", view=views.delete_consistency_widget_link),
     path('gtfs_admin/configure_widget/delete_review_widget_related_field_same_table/<int:widget_id>/<int:field_id>/', name="delete_review_widget_related_field_same_table", view=views.delete_review_widget_related_field_same_table),
     path('gtfs_admin/configure_widget/delete_results_capture_score/<int:score_id>/', name="delete_results_capture_score", view=views.delete_results_capture_score),
     path('start_new_evaluation/', name='start_new_evaluation', view=views.start_new_evaluation),
@@ -45,12 +45,14 @@ urlpatterns = [
     path('evaluate_feed/<int:review_id>/', name='evaluate_feed', view=views.evaluate_feed),
     path('evaluate_feed/<int:review_id>/<int:active_review_category_id>/', name='evaluate_feed', view=views.evaluate_feed),
     path('evaluate_feed/<int:review_id>/<int:active_review_category_id>/<int:active_result_number>', name='evaluate_feed', view=views.evaluate_feed),
+    path('evaluate_feed_by_id/<int:review_id>/<int:active_review_category_id>/<int:active_result_id>', name='evaluate_feed_by_result_id', view=views.evaluate_feed_by_result_id),
     path('review/<int:review_id>/', name='review_evaluation_results', view=views.review_evaluation_results),
     path('review/<int:review_id>/<int:active_result_id>/', name='review_evaluation_results', view=views.review_evaluation_results),
     path('mark_review_complete/<int:review_id>/', name='mark_review_complete', view=views.mark_review_complete),
     path('search_competed_review/', name='search_competed_review', view=views.search_competed_review),
     path('view_completed_review/<int:review_id>/', name='view_completed_review', view=views.view_completed_review),
-    path('view_completed_review/<int:review_id>/<int:active_result_id>/', name='view_completed_review', view=views.view_completed_review)
+    path('view_completed_review/<int:review_id>/<int:active_result_id>/', name='view_completed_review', view=views.view_completed_review),
+    path('skip_it/<int:result_id>/', name='skip_it_replace_result', view=views.skip_it_replace_result)
 ]
 
 if settings.DEBUG:

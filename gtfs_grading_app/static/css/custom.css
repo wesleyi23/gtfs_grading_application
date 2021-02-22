@@ -330,7 +330,6 @@ input[type=submit]{
 
 .review-card{
   margin-top: 0rem;
-  margin-bottom: 1rem;
   padding: .75rem;
   border-radius: 2.5rem;
 }
@@ -399,4 +398,23 @@ label:empty { display: none; }
 .img-fluid {
   max-width: 100%;
   height: auto
+}
+
+.feed-portion-form {
+  padding-left: 0rem !important;
+}
+
+.evaluate-new-feed-card {
+  padding-top: .5rem;
+  padding-bottom: 0rem;
+}
+
+.btn {
+  line-height: 1.5 !important;
+  font-weight: lighter !important;
+  font-size: .85rem !important;
+}
+
+.review-heading p{
+
 }

@@ -65,8 +65,6 @@ def get_all_gtfs_field_tuple(gtfs_spec=None):
             choice_tuple = choice_tuple + ((f['name'], f['name']),)
     return choice_tuple
 
-
-
 def get_field_type(field, table):
     """returns the GTFS field type of the given field in a given table"""
     for i in settings.GTFS_SPEC['resources']:
@@ -79,4 +77,12 @@ def get_field_type(field, table):
     raise ValueError("Field not found in GTFS spec.")
 
 
-
+def get_table_primary_key(table):
+    '''Returns the primary key of a table or None'''
+    for i in settings.GTFS_SPEC['resources']:
+        print(i['name'])
+        if i['name'] == table:
+            print(i['name'])
+            print(i['schema']['primaryKey'])
+            return i['schema']['primaryKey']
+    return None

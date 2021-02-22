@@ -102,6 +102,7 @@ class review_category(models.Model):
 
 class review(models.Model):
     CHOICES = (("In progress", "In progress"),
+               ("In review", "In review"),
                ("Completed", "Completed"))
 
     agency = models.CharField(max_length=150, null=False)
@@ -111,6 +112,13 @@ class review(models.Model):
     completed_date = models.DateTimeField(null=True)
     final_score = models.FloatField(null=True)
 
+    def mark_status_in_review(self):
+        self.review_status = "In review"
+        self.save()
+
+    def mark_status_complete(self):
+        self.review_status = "Completed"
+        self.save()
 
 class result(models.Model):
     review = models.ForeignKey(review, on_delete=models.PROTECT)
@@ -118,24 +126,32 @@ class result(models.Model):
     score = models.ForeignKey(score, null=True, on_delete=models.PROTECT)
     score_reason = models.TextField(null=True)
     reviewed_data = models.TextField()
+    reviewed_data_pk_name = models.CharField(max_length=100)
+    reviewed_data_pk_value = models.CharField(max_length=100)
 
 
 class related_field(models.Model):
-    result = models.ForeignKey(result, on_delete=models.PROTECT)
+    result = models.ForeignKey(result, on_delete=models.CASCADE)
     gtfs_field = models.ForeignKey(gtfs_field, on_delete=models.PROTECT)
     gtfs_field_value = models.TextField()
 
 
 class result_image(models.Model):
-    result = models.ForeignKey(result, on_delete=models.PROTECT)
+    result = models.ForeignKey(result, on_delete=models.CASCADE)
     image = models.ImageField(null=False, upload_to='result_images')
 
 
 class result_reference(models.Model):
-    result = models.ForeignKey(result, on_delete=models.PROTECT)
+    result = models.ForeignKey(result, on_delete=models.CASCADE)
     reference_name = models.CharField(null=True, max_length=200)
     url = models.URLField()
     published_reference_date = models.DateTimeField(null=True)
+
+
+class mode_lookup_table(models.Model):
+    mode_id = models.ImageField(null=False)
+    mode_name = models.CharField(null=False, max_length=150)
+    mode_description = models.CharField(null=False, max_length=300)
 
 
 

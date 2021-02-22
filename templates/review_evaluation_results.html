@@ -16,19 +16,19 @@
     <div class="container-fluid w-100 h-100" >
 
         <div class="row">
-            <div id="review-area" class="col-9" style="height: 100%">
+            <div id="review-area" class="col-9" style="height: 100%; overflow: hidden">
                 {% include 'messages.html' %}
                 <h1>Review</h1>
                 <b>Confrim your choices</b>
                 <p>Click any element to review your score.</p>
                 <div class="row">
                     <div class="col-6">
-                        <div class="card">
+                        <div class="card" style="z-index: 55">
                             <div class="card-body">
                                 <div class="review-heading">
-                                    <p>Agency: {{ active_review.agency }}</p>
-                                    <p>Vehicle Type: {{ active_review.mode }}</p>
-                                    <p>Date: {{ active_review.created_date }}</p>
+                                    <b>{{ active_review.agency }}</b><br>
+                                    <b>{{ active_review.mode | filter_mode_id_to_name }}</b><br>
+                                    <b>{{ active_review.created_date }}</b><br>
                                 </div>
                                 <hr>
                                 <div class="review-results">
@@ -36,7 +36,7 @@
                                         <tbody>
                                         {% for result in results %}
                                             <tr onclick="window.location='{% url 'review_evaluation_results' active_review.id result.id %}';">
-                                                <td>{{ result.review_category.gtfs_field.field_name_to_label }}</td>
+                                                <td style="min-width: 155px;">{{ result.review_category.gtfs_field.field_name_to_label }}</td>
                                                 <td>{{ result.reviewed_data }}</td>
                                                 <td>{{ result.score.score | score_display_round}}</td>
                                             </tr>
@@ -46,30 +46,39 @@
                                 </div>
                             </div>
                         </div>
-                    <a class="btn btn-secondary" href="{% url 'mark_review_complete' active_review.id %}">Complete ></a>
+                        <a class="btn btn-secondary" href="{% url 'mark_review_complete' active_review.id %}">Complete ></a>
                     </div>
                     <div class="col-6">
                         {% if active_result %}
-                            <div class="row">
-                                {% include review_widget_template %}
+                            <div class="row pt-5">
+                                <div class="position-relative">
+                                    <div class="position-absolute top-50 start-50 translate-middle" style="background: var(--green); height: 50px; width: 200%"></div>
+                                    <div style="margin-left: 1rem;">
+                                        {% include review_widget_template %}
+                                    </div>
+                                </div>
                             </div>
-                            <div class="row">
+                            <div class="row pt-3 pb-3">
+                                <hr>
+                            </div>
+                            <div class="row pt-2">
                                 <div class="col-3">Your score:</div>
                                 <div class="col-9">
                                     {# Duplicate code in review_evaluation_results.html. Time was running out and the bats were closing in.  Please forgive me.#}
-                                    <div class="card score-card ">
+                                    <div class="card score-card">
                                         <div class="card-body score-card-body">
                                             <div class="score-number">{{ active_result.score.score | score_display_round }}</div>
                                             <div class="score-help-text">{{ active_result.score.help_text }}</div>
                                         </div>
-                                    </div></div>
-                            </div>
-                            <div class="row">
-                                <div class="col-3">Your explanation:</div>
-                                <div class="col-9"><span class="score-explanation"><p>{{ active_result.score_reason }}</p></span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="row">
+                            <div class="row pt-2">
+                                <div class="col-3">Your explanation:</div>
+                                <div class="col-9"><span class="score-explanation"><p>{% if active_result.score_reason %} {{ active_result.score_reason }} {% else %}[Blank]{% endif %} </p></span>
+                                </div>
+                            </div>
+                            <div class="row pt-2">
                                 <div class="col-3">Your screenshot:</div>
                                 <div class="col-9">
                                     {% if image %}
@@ -77,6 +86,8 @@
                                     {% endif %}
                                 </div>
                             </div>
+                            <a class="btn btn-primary float-right mt-3" href="{% url 'evaluate_feed_by_result_id' active_result.review_id active_result.review_category_id active_result.id%}">Edit review ></a>
+
                         {% endif %}
                     </div>
                 </div>
@@ -87,9 +98,9 @@
                 <div class="p-2 bd-highlight" style="height: 275px; width: 100%">
                     <h2 class="agency-name">{{ active_review.agency }}</h2>
                     <div class="gtfs-progress-bar">
-                        40% complete
+                        100% complete
                         <div class="progress" style="height:20px">
-                            <div class="progress-bar" style="width:40%;height:20px"></div>
+                            <div class="progress-bar" style="width:100%;height:20px"></div>
                         </div>
                     </div>
                     <hr style="margin-top: 2.5rem">

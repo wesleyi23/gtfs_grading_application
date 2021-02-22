@@ -4,3 +4,5 @@ mypy==0.790
 django-stubs==1.7.0
 Partridge==1.1.1
 Pillow==8.0.1
+gunicorn==20.0.4
+whitenoise

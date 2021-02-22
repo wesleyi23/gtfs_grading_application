@@ -7,12 +7,14 @@
 {% endblock %}
 
 {% block page_content %}
+    <div style="display: none">
     {% if previous_review_path %}
         <a href="{{ previous_review_path }}">Previous</a>
     {% endif %}
     {% if next_review_path %}
         <a href="{{ next_review_path }}">Next</a>
     {% endif %}
+    </div>
     <div class="container-fluid w-100 h-100" >
         <div class="row">
             <div id="review-area" class="col-9" style="height: 100%">
@@ -21,7 +23,8 @@
                 <p>Find this element in another resource published by the agency, such as their website or printed schedule.</p>
                 {% include review_widget_template %}
 
-                <p>Can’t find this element in another source? Skip it and try another.</p>
+                <p>Can’t find this element in another source? <a href="{% url 'skip_it_replace_result' active_result.id %}">Skip it</a>
+                    and try another.</p>
                 <hr>
                 <p><b>Select a Score</b></p>
                 <p>Examine the element above and determine how consistently it matches other sources.</p>
@@ -32,9 +35,9 @@
                 <div class="p-2 bd-highlight" style="height: 275px; width: 100%">
                     <h2 class="agency-name">{{ active_review.agency }}</h2>
                     <div class="gtfs-progress-bar">
-                        40% complete
+                        {{ percentage_complete }}% complete
                         <div class="progress" style="height:20px">
-                            <div class="progress-bar" style="width:40%;height:20px"></div>
+                            <div class="progress-bar" style="width:{{ percentage_complete }}%;height:20px"></div>
                         </div>
                     </div>
                     <hr style="margin-top: 2.5rem">

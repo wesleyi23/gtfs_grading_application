@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django.forms import formset_factory
 from django.forms.models import inlineformset_factory
-from django.http.response import HttpResponse, HttpResponseRedirect
+from django.http.response import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 import tempfile
 import zipfile
@@ -12,8 +12,8 @@ from django.contrib import messages
 # Create your views here.
 from django.views.generic import ListView, DetailView
 
-from gtfs_grading_app.Functions.functions import list_to_tuple_of_tuples, get_next_review_item, \
-    get_previous_review_item, get_or_none
+from gtfs_grading_app.Functions.functions import get_next_review_item, \
+    get_previous_review_item, get_or_none, get_mode_drop_down, list_to_tuple_of_tuples
 from gtfs_grading_app.classes.classes import review_widget_factory, consistency_widget_factory, \
     results_capture_widget_factory, ReviewWidget, DataSelector
 from gtfs_grading_app.forms import GtfsZipForm, AddReviewCategory, AddReviewWidget, AddConsistencyWidget, \
@@ -54,6 +54,7 @@ def amdin_add_new(request):
         form = AddReviewCategory(request.POST, prefix="form_ReviewCategory")
         if form.is_valid():
             form.save()
+            return redirect('admin_details', review_id=review_category.objects.all().order_by("-id")[0].id)
     else:
         form = AddReviewCategory(prefix="form_ReviewCategory")
 
@@ -148,6 +149,7 @@ def admin_details(request, review_id):
 
 
 def evaluate_feed(request, review_id=None, active_review_category_id=None, active_result_number=None):
+    # TODO reorder to improve performance
     if review_id is None:
         return redirect(start_new_evaluation)
     if active_review_category_id is None:
@@ -159,14 +161,22 @@ def evaluate_feed(request, review_id=None, active_review_category_id=None, activ
 
     active_review = get_object_or_404(review, pk=review_id)
 
+    # calculate progress
+    total_results = result.objects.filter(review_id=review_id).count()
+    completed_results = result.objects.filter(review_id=review_id).exclude(score=None).count()
+    percentage_complete = int(round(completed_results/total_results, 2) * 100)
+
+    # collect results
     review_categories = review_category.objects.all()
     results = result.objects.filter(review_id=review_id, review_category_id=active_review_category.id)
     active_result = results[active_result_number-1]
     max_items = results.count()
 
+    # get widgets
     active_review_widget = review_widget_factory(active_review_category.review_widget, active_result)
     active_result_capture_widget = results_capture_widget_factory(active_review_category.results_capture_widget, active_result)
 
+    # get next and last item paths
     next_review_path = get_next_review_item(active_result_number,
                                             max_items,
                                             active_review,
@@ -185,8 +195,10 @@ def evaluate_feed(request, review_id=None, active_review_category_id=None, activ
             if next_review_path is None:
                 return redirect('review_evaluation_results', review_id=active_review.id)
             else:
-                return redirect(next_review_path)
-
+                if active_review.review_status == "In progress":
+                    return redirect(next_review_path)
+                else:
+                    return redirect('review_evaluation_results', active_review.id)
 
     else:
         reference = get_or_none(result_reference, result_id=active_result.id)
@@ -203,8 +215,6 @@ def evaluate_feed(request, review_id=None, active_review_category_id=None, activ
             image = image.image
         else:
             image = None
-
-
 
         form = active_result_capture_widget.get_form(initial={'result_id': active_result.id,
                                                               'review_category_id': active_result.review_category_id,
@@ -231,7 +241,8 @@ def evaluate_feed(request, review_id=None, active_review_category_id=None, activ
                'result_capture_template': result_capture_template,
                'form': form,
                'next_review_path': next_review_path,
-               'previous_review_path': previous_review_path}
+               'previous_review_path': previous_review_path,
+               'percentage_complete': percentage_complete}
 
     context.update(review_widget_context)
     context.update(result_capture_context)
@@ -239,9 +250,26 @@ def evaluate_feed(request, review_id=None, active_review_category_id=None, activ
     return render(request, 'evaluate_feed.html', context)
 
 
+def evaluate_feed_by_result_id(request, review_id, active_review_category_id, active_result_id):
+    results = result.objects.filter(review_id=review_id, review_category_id=active_review_category_id)
+    active_result = result.objects.get(id=active_result_id)
+    print('test')
+    i = 0
+    for my_result in results:
+        if my_result == active_result:
+            return redirect('evaluate_feed', review_id, active_review_category_id, i)
+        else:
+            i += 1
+
+    raise Http404("Review not found")
+
 def review_evaluation_results(request, review_id, active_result_id=None):
     review_categories = review_category.objects.all()
     active_review = get_object_or_404(review, pk=review_id)
+    print(active_review.review_status)
+    if active_review.review_status == "In progress":
+        print('true')
+        active_review.mark_status_in_review()
     results = result.objects.filter(review_id=active_review.id).select_related()
 
     context = {'active_review': active_review,
@@ -316,7 +344,7 @@ def start_new_evaluation(request):
         agency_options = gtfs_feed.agency['agency_name'].tolist()
         agency_options = list_to_tuple_of_tuples(agency_options)
         mode_options = list(set(gtfs_feed.routes['route_type'].tolist()))
-        mode_options = list_to_tuple_of_tuples(mode_options)
+        mode_options = get_mode_drop_down(mode_options)
         my_new_review_form = NewReviewForm(agency_options=agency_options, mode_options=mode_options)
     else:
         my_new_review_form = None
@@ -400,54 +428,54 @@ class ViewReviewWidget(DetailView):
         context = {'review_widget': this_review_widget}
         return render(request, 'admin/view_review_widget.html', context)
 
-
-def add_review_category(request):
-    if request.method == 'POST':
-        updated_data = request.POST.copy()
-
-        gtfs_type = get_field_type(request.POST.get('form_ReviewCategory-gtfs_field'), request.POST.get('form_ReviewCategory-review_table'))
-
-        obj, created = gtfs_field.objects.get_or_create(name=request.POST.get('form_ReviewCategory-gtfs_field'),
-                                                        table=request.POST.get('form_ReviewCategory-review_table'),
-                                                        type=gtfs_type)
-
-        updated_data.update({'form_ReviewCategory-gtfs_field': obj})
-
-        form_ReviewCategory = AddReviewCategory(updated_data, prefix="form_ReviewCategory")
-        form_ReviewWidget = AddReviewWidget(request.POST, prefix="form_ReviewWidget")
-        form_AddConsistencyWidget = AddConsistencyWidget(request.POST, prefix="form_AddConsistencyWidget")
-        form_AddResultsCaptureWidget = AddResultsCaptureWidget(request.POST, prefix="form_AddResultsCaptureWidget")
-
-        if form_ReviewCategory.is_valid() and form_ReviewWidget.is_valid() and \
-                form_AddConsistencyWidget.is_valid() and form_AddResultsCaptureWidget.is_valid():
-            this_review_widget = form_ReviewWidget.save()
-            this_consistency_widget = form_AddConsistencyWidget.save()
-            this_results_capture_widget = form_AddResultsCaptureWidget.save()
-
-            this_review_category = form_ReviewCategory.save(commit=False)
-            this_review_category.review_widget = this_review_widget
-            this_review_category.consistency_widget = this_consistency_widget
-            this_review_category.results_capture_widget = this_results_capture_widget
-
-            this_review_category.save()
-
-            return redirect('configure_widget', widget_type="review", widget_id=this_review_widget.id)
-
-    else:
-        from gtfs_grading_app.gtfs_spec.import_gtfs_spec import get_gtfs_table_tuple
-        t = get_gtfs_table_tuple()
-        form_ReviewCategory = AddReviewCategory(prefix="form_ReviewCategory")
-        form_ReviewWidget = AddReviewWidget(prefix="form_ReviewWidget")
-        form_AddConsistencyWidget = AddConsistencyWidget(prefix="form_AddConsistencyWidget")
-        form_AddResultsCaptureWidget = AddResultsCaptureWidget(prefix="form_AddResultsCaptureWidget")
-
-    drop_down = get_cascading_drop_down()
-
-    return render(request, 'admin/add_review_category.html', {'form_ReviewCategory': form_ReviewCategory,
-                                                              'form_ReviewWidget': form_ReviewWidget,
-                                                              'form_AddConsistencyWidget': form_AddConsistencyWidget,
-                                                              'form_AddResultsCaptureWidget': form_AddResultsCaptureWidget,
-                                                              'drop_down': drop_down})
+#
+# def add_review_category(request):
+#     if request.method == 'POST':
+#         updated_data = request.POST.copy()
+#
+#         gtfs_type = get_field_type(request.POST.get('form_ReviewCategory-gtfs_field'), request.POST.get('form_ReviewCategory-review_table'))
+#
+#         obj, created = gtfs_field.objects.get_or_create(name=request.POST.get('form_ReviewCategory-gtfs_field'),
+#                                                         table=request.POST.get('form_ReviewCategory-review_table'),
+#                                                         type=gtfs_type)
+#
+#         updated_data.update({'form_ReviewCategory-gtfs_field': obj})
+#
+#         form_ReviewCategory = AddReviewCategory(updated_data, prefix="form_ReviewCategory")
+#         form_ReviewWidget = AddReviewWidget(request.POST, prefix="form_ReviewWidget")
+#         form_AddConsistencyWidget = AddConsistencyWidget(request.POST, prefix="form_AddConsistencyWidget")
+#         form_AddResultsCaptureWidget = AddResultsCaptureWidget(request.POST, prefix="form_AddResultsCaptureWidget")
+#
+#         if form_ReviewCategory.is_valid() and form_ReviewWidget.is_valid() and \
+#                 form_AddConsistencyWidget.is_valid() and form_AddResultsCaptureWidget.is_valid():
+#             this_review_widget = form_ReviewWidget.save()
+#             this_consistency_widget = form_AddConsistencyWidget.save()
+#             this_results_capture_widget = form_AddResultsCaptureWidget.save()
+#
+#             this_review_category = form_ReviewCategory.save(commit=False)
+#             this_review_category.review_widget = this_review_widget
+#             this_review_category.consistency_widget = this_consistency_widget
+#             this_review_category.results_capture_widget = this_results_capture_widget
+#
+#             this_review_category.save()
+#
+#             return redirect('configure_widget', widget_type="review", widget_id=this_review_widget.id)
+#
+#     else:
+#         from gtfs_grading_app.gtfs_spec.import_gtfs_spec import get_gtfs_table_tuple
+#         t = get_gtfs_table_tuple()
+#         form_ReviewCategory = AddReviewCategory(prefix="form_ReviewCategory")
+#         form_ReviewWidget = AddReviewWidget(prefix="form_ReviewWidget")
+#         form_AddConsistencyWidget = AddConsistencyWidget(prefix="form_AddConsistencyWidget")
+#         form_AddResultsCaptureWidget = AddResultsCaptureWidget(prefix="form_AddResultsCaptureWidget")
+#
+#     drop_down = get_cascading_drop_down()
+#
+#     return render(request, 'admin/add_review_category.html', {'form_ReviewCategory': form_ReviewCategory,
+#                                                               'form_ReviewWidget': form_ReviewWidget,
+#                                                               'form_AddConsistencyWidget': form_AddConsistencyWidget,
+#                                                               'form_AddResultsCaptureWidget': form_AddResultsCaptureWidget,
+#                                                               'drop_down': drop_down})
 
 
 def delete_review_category(request, review_category_id):
@@ -456,41 +484,41 @@ def delete_review_category(request, review_category_id):
     messages.success(request, 'The review category has been deleted')
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-
-def configure_widget(request, widget_type, widget_id):
-    if widget_type == "review":
-        this_widget = review_widget_factory(get_object_or_404(review_widget, id=widget_id))
-    elif widget_type == "consistency":
-        this_widget = consistency_widget_factory(get_object_or_404(consistency_widget, id=widget_id))
-    elif widget_type == "results_capture":
-        this_widget = results_capture_widget_factory(get_object_or_404(results_capture_widget, id=widget_id))
-    else:
-        raise NotImplementedError
-
-    creation_form = this_widget.get_creation_form(instance=this_widget.model_instance)
-
-    if request.POST:
-        forms = this_widget.get_configuration_form(request.POST, request.FILES)
-
-        any_valid = False
-        for key, value in forms.items():
-            if value[0].is_valid():
-                all_valid = True
-                value[0].save()
-                return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
-    else:
-        forms = this_widget.get_configuration_form()
-
-    template = this_widget.get_configuration_template()
-
-    if not template:
-        template = 'admin/configure_widget.html'
-
-    return render(request, template, {'forms': forms,
-                                      'this_widget': this_widget,
-                                      'creation_form': creation_form
-                                      })
+#
+# def configure_widget(request, widget_type, widget_id):
+#     if widget_type == "review":
+#         this_widget = review_widget_factory(get_object_or_404(review_widget, id=widget_id))
+#     elif widget_type == "consistency":
+#         this_widget = consistency_widget_factory(get_object_or_404(consistency_widget, id=widget_id))
+#     elif widget_type == "results_capture":
+#         this_widget = results_capture_widget_factory(get_object_or_404(results_capture_widget, id=widget_id))
+#     else:
+#         raise NotImplementedError
+#
+#     creation_form = this_widget.get_creation_form(instance=this_widget.model_instance)
+#
+#     if request.POST:
+#         forms = this_widget.get_configuration_form(request.POST, request.FILES)
+#
+#         any_valid = False
+#         for key, value in forms.items():
+#             if value[0].is_valid():
+#                 all_valid = True
+#                 value[0].save()
+#                 return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+#
+#     else:
+#         forms = this_widget.get_configuration_form()
+#
+#     template = this_widget.get_configuration_template()
+#
+#     if not template:
+#         template = 'admin/configure_widget.html'
+#
+#     return render(request, template, {'forms': forms,
+#                                       'this_widget': this_widget,
+#                                       'creation_form': creation_form
+#                                       })
 
 
 def delete_consistency_widget_visual_example(request, image_id):
@@ -521,3 +549,11 @@ def delete_results_capture_score(request, score_id):
     messages.success(request, 'The score has been deleted')
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+def skip_it_replace_result(request, result_id):
+    if not request.session['gtfs_feed']:
+        messages.error("You do not have an active GTFS feed.  You may not skip any fields in this review.")
+
+
+
+
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))

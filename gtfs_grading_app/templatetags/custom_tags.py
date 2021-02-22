@@ -25,7 +25,7 @@ def get_gtfs_field_name_from_id(gtfs_field_id):
 @register.filter()
 def score_display_round(score):
     if float(score).is_integer():
-        return round(score, 0)
+        return int(score)
     else:
         return score
 
@@ -33,3 +33,9 @@ def score_display_round(score):
 @register.filter()
 def plus1(number):
     return number + 1
+
+
+@register.filter()
+def filter_mode_id_to_name(mode_id):
+    from gtfs_grading_app.Functions.functions import mode_id_to_name
+    return mode_id_to_name(mode_id)
