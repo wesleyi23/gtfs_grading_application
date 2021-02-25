@@ -3,5 +3,5 @@ This application implements the proposed GTFS Grading Scheme v1
 
 UNDER DEVELOPMENT
 
-Link to proposed proposed GTFS Grading Scheme v1: 
-https://bit.ly/gtfs-grading-scheme-v1 
+Link to the proposed GTFS Grading Scheme: 
+https://github.com/mobilityData/gtfs-grading-scheme/
